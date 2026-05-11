@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BlackRock Admin - Logs do Sistema</title>
+    
+    <link rel="stylesheet" href="admin_global.css">
+    
+    <style>
+        /* CSS EXCLUSIVO DOS LOGS E AUDITORIA */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: var(--card); border: 1px solid var(--borda); padding: 20px; border-radius: 16px; position: relative; overflow: hidden; }
+        .stat-card span { font-size: 10px; color: var(--texto-med); text-transform: uppercase; display: block; margin-bottom: 8px; font-weight: 800; }
+        .stat-card strong { font-size: 24px; font-weight: 900; }
+        
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; background: var(--card); padding: 15px; border-radius: 16px; border: 1px solid var(--borda); margin-bottom: 20px; align-items: center; justify-content: space-between; }
+        .filters { display: flex; flex-wrap: wrap; gap: 10px; flex: 1; }
+        .input-dark { background: #1A202C; border: 1px solid var(--borda); color: #FFF; padding: 10px 15px; border-radius: 8px; outline: none; font-size: 12px; }
+        .btn-export { background: rgba(56, 224, 144, 0.15); color: var(--verde); border: 1px solid var(--verde); padding: 10px 15px; border-radius: 8px; font-size: 11px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .btn-export:hover { background: var(--verde); color: #000; }
+
+        .table-container { background: var(--card); border: 1px solid var(--borda); border-radius: 16px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+        th { background: #1A202C; color: var(--texto-med); padding: 15px; text-transform: uppercase; font-weight: 900; font-size: 10px; letter-spacing: 1px; }
+        td { padding: 15px; border-bottom: 1px solid #14171F; }
+        tr:hover { background: rgba(255, 255, 255, 0.02); cursor: pointer; }
+
+        .tag { font-size: 9px; padding: 4px 8px; border-radius: 6px; font-weight: 900; text-transform: uppercase; }
+        .t-auth { background: rgba(0, 255, 255, 0.1); color: var(--cyan); }
+        .t-fin { background: rgba(56, 224, 144, 0.1); color: var(--verde); }
+        .t-user { background: rgba(148, 163, 184, 0.1); color: var(--texto-med); }
+        .t-admin { background: rgba(246, 224, 94, 0.1); color: var(--aviso); }
+        .t-sec { background: rgba(255, 75, 75, 0.1); color: var(--alerta); }
+        .t-sys { background: rgba(236, 26, 124, 0.1); color: var(--magenta); }
+        
+        .s-sucesso { color: var(--verde); }
+        .s-falha { color: var(--alerta); }
+
+        /* Modal Detalhes do Evento */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--card); border: 1px solid var(--borda); width: 100%; max-width: 600px; border-radius: 20px; padding: 25px; }
+        .modal-title { font-size: 16px; color: var(--cyan); margin-bottom: 20px; text-transform: uppercase; font-weight: bold; }
+        .modal-body { background: #1A202C; padding: 15px; border-radius: 12px; font-family: monospace; font-size: 12px; color: #A0AEC0; white-space: pre-wrap; word-wrap: break-word; border-left: 3px solid var(--magenta); margin-bottom: 20px; max-height: 50vh; overflow-y: auto; }
+        .btn-close { width: 100%; padding: 12px; background: var(--texto-med); color: #000; font-weight: 900; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .btn-close:hover { background: #FFF; }
+    </style>
+</head>
+<body>
+    <header class="header-admin">
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        <div class="header-title">AUDITORIA E LOGS GERAIS</div>
+    </header>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <nav class="sidebar" id="sidebar">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
+            <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
+        </div>
+        <a href="admin_dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="admin_financeiro.html" class="nav-link">💰 Financeiro <span class="notif-badge" id="badge-fin">0</span></a>
+        <a href="admin_usuarios.html" class="nav-link">👥 Usuários</a>
+        <a href="admin_rede.html" class="nav-link">🌳 Rede & Comissões</a>
+        <a href="admin_configs.html" class="nav-link">⚙️ Planos (Nodes)</a>
+        <a href="admin_tarefas.html" class="nav-link">📋 Controle de Tarefas</a>
+        <a href="admin_feed.html" class="nav-link">📢 Feed & Mural</a>
+        <a href="admin_chat.html" class="nav-link">💬 Suporte (SAC) <span class="notif-badge" id="badge-chat">0</span></a>
+        <a href="admin_notificacoes.html" class="nav-link">🔔 Notificações <span class="notif-badge" id="badge-notif">0</span></a>
+        <a href="admin_seguranca.html" class="nav-link" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
+        <a href="admin_requisitos.html" class="nav-link">🛠️ Sistema & Regras</a>
+        <a href="admin_logs.html" class="nav-link active">🧾 Logs do Sistema</a>
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+            <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="stats-grid fade-in">
+            <div class="stat-card">
+                <span>Eventos (Hoje)</span>
+                <strong id="st-total" style="color: var(--cyan);">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>Erros Detectados</span>
+                <strong id="st-erros" style="color: var(--alerta);">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>Atividades Suspeitas</span>
+                <strong id="st-suspeito" style="color: var(--aviso);">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>Alterações ADMIN</span>
+                <strong id="st-admin" style="color: var(--magenta);">0</strong>
+            </div>
+        </div>
+
+        <div class="toolbar fade-in" style="animation-delay: 0.1s;">
+            <div class="filters">
+                <input type="text" id="filtro-busca" class="input-dark" placeholder="Buscar ID ou Nome..." style="min-width: 200px;" oninput="aplicarFiltros()">
+                <select id="filtro-tipo" class="input-dark" onchange="aplicarFiltros()">
+                    <option value="TODOS">Todos os Tipos</option>
+                    <option value="AUTENTICACAO">Autenticação</option>
+                    <option value="FINANCEIRO">Financeiro</option>
+                    <option value="USUARIO">Usuário</option>
+                    <option value="ADMIN">Ações do Admin</option>
+                    <option value="SEGURANCA">Segurança</option>
+                    <option value="SISTEMA">Sistema</option>
+                </select>
+                <select id="filtro-status" class="input-dark" onchange="aplicarFiltros()">
+                    <option value="TODOS">Qualquer Status</option>
+                    <option value="sucesso">Apenas Sucesso</option>
+                    <option value="falha">Apenas Falhas</option>
+                </select>
+            </div>
+            <div>
+                <button class="btn-export" onclick="exportarCSV()">📥 Exportar CSV</button>
+            </div>
+        </div>
+        
+        <p style="font-size: 11px; color: var(--texto-med); margin-bottom: 15px;">* Exibindo os 300 registos de auditoria mais recentes (Retenção máx: 90 dias).</p>
+
+        <div class="table-container fade-in" style="animation-delay: 0.2s;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data & Hora</th>
+                        <th>Tipo</th>
+                        <th>Ação / Descrição</th>
+                        <th>Usuário / Origem</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-logs">
+                    <tr><td colspan="5" style="text-align: center; color: var(--texto-med); padding: 40px;">Sincronizando Caixa Negra...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modalDetalhes" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">Auditoria Detalhada do Evento</h2>
+            <div id="modal-conteudo" class="modal-body"></div>
+            <button onclick="fecharModal()" class="btn-close">FECHAR JANELA</button>
+        </div>
+    </div>
+
+    <script src="admin_global.js"></script>
+
+    <script>
+        // JS EXCLUSIVO DA PÁGINA
+        let logsOriginais = [];
+
+        window.onload = () => {
+            carregarEstatisticas();
+            carregarLogs();
+            setInterval(carregarLogs, 20000); 
+        };
+
+        async function carregarEstatisticas() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/logs/resumo`, { 
+                    headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } 
+                });
+                if(res.ok) {
+                    const dados = await res.json();
+                    document.getElementById('st-total').innerText = dados.totalHoje || 0;
+                    document.getElementById('st-erros').innerText = dados.erros || 0;
+                    document.getElementById('st-suspeito').innerText = dados.suspeitas || 0;
+                    document.getElementById('st-admin').innerText = dados.adminAcoes || 0;
+                }
+            } catch(e) { console.error("Falha ao puxar estatísticas."); }
+        }
+
+        async function carregarLogs() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/logs/listar`, { 
+                    headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } 
+                });
+                if(res.ok) {
+                    const dados = await res.json();
+                    if(Array.isArray(dados)) {
+                        logsOriginais = dados;
+                        aplicarFiltros();
+                    }
+                }
+            } catch(e) { console.error("Falha ao puxar logs."); }
+        }
+
+        function getTagClass(tipo) {
+            const t = String(tipo).toUpperCase();
+            if(t === 'AUTENTICACAO') return 't-auth';
+            if(t === 'FINANCEIRO') return 't-fin';
+            if(t === 'ADMIN') return 't-admin';
+            if(t === 'SEGURANCA') return 't-sec';
+            if(t === 'SISTEMA') return 't-sys';
+            return 't-user';
+        }
+
+        function aplicarFiltros() {
+            const busca = document.getElementById('filtro-busca').value.toLowerCase();
+            const tipo = document.getElementById('filtro-tipo').value;
+            const status = document.getElementById('filtro-status').value;
+
+            const filtrados = logsOriginais.filter(l => {
+                const mBusca = (l.usuario && l.usuario.toLowerCase().includes(busca)) || (l.acao && l.acao.toLowerCase().includes(busca));
+                const mTipo = tipo === 'TODOS' || l.tipo === tipo;
+                const mStatus = status === 'TODOS' || l.status === status;
+                return mBusca && mTipo && mStatus;
+            });
+
+            renderizarTabela(filtrados);
+        }
+
+        function renderizarTabela(lista) {
+            const tbody = document.getElementById('lista-logs');
+            if(lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--texto-med); padding: 40px;">Nenhum registo encontrado para estes filtros.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = lista.map(l => {
+                const dataFormatada = new Date(l.createdAt).toLocaleString('pt-PT');
+                const tagClass = getTagClass(l.tipo);
+                const statClass = l.status === 'sucesso' ? 's-sucesso' : 's-falha';
+                const statusSymbol = l.status === 'sucesso' ? '✔' : '❌';
+                
+                const jsonStr = encodeURIComponent(JSON.stringify(l, null, 2));
+
+                return `
+                    <tr onclick="abrirDetalhes('${jsonStr}')">
+                        <td style="color: var(--texto-med); font-family: monospace;">${dataFormatada}</td>
+                        <td><span class="tag ${tagClass}">${l.tipo}</span></td>
+                        <td style="color: #FFF; font-weight: 600;">${l.acao}</td>
+                        <td style="color: var(--cyan); font-family: monospace;">${l.usuario || l.ip || 'Sistema'}</td>
+                        <td class="${statClass}"><span style="font-weight:900;">${statusSymbol}</span> ${l.status.toUpperCase()}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function abrirDetalhes(encodedJson) {
+            const data = JSON.parse(decodeURIComponent(encodedJson));
+            const formatado = `
+ID DO EVENTO: ${data._id || 'N/A'}
+DATA/HORA:    ${new Date(data.createdAt).toLocaleString('pt-PT')}
+ORIGEM IP:    ${data.ip || 'Interno'}
+STATUS REAL:  ${data.status.toUpperCase()}
+
+[ DADOS PROCESSADOS ]
+${data.detalhes ? JSON.stringify(data.detalhes, null, 2) : 'Nenhum dado adicional capturado.'}
+            `;
+            document.getElementById('modal-conteudo').innerText = formatado.trim();
+            document.getElementById('modalDetalhes').style.display = 'flex';
+        }
+
+        function fecharModal() {
+            document.getElementById('modalDetalhes').style.display = 'none';
+        }
+
+        function exportarCSV() {
+            if(logsOriginais.length === 0) return alert("Sem dados para exportar.");
+            let csv = "Data,Tipo,Acao,Usuario,IP,Status\n";
+            logsOriginais.forEach(l => {
+                csv += `"${new Date(l.createdAt).toLocaleString()}","${l.tipo}","${l.acao}","${l.usuario || ''}","${l.ip || ''}","${l.status}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'blackrock_auditoria_' + Date.now() + '.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>

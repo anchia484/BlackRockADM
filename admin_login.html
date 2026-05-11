@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BlackRock - Acesso Diretoria</title>
+    <style>
+        :root {
+            --bg: #07090D; --card: #0F1219; --magenta: #EC1A7C; --cyan: #00FFFF;
+            --texto: #FFFFFF; --borda: #1A202C;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: var(--texto); height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        
+        .login-box { background: var(--card); width: 100%; max-width: 400px; padding: 40px 30px; border-radius: 20px; border: 1px solid var(--borda); position: relative; overflow: hidden; }
+        .login-box::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--magenta), #4E3FEA); }
+        
+        .header { text-align: center; margin-bottom: 35px; }
+        .header h1 { font-size: 22px; font-weight: 900; letter-spacing: 2px; color: var(--magenta); }
+        .header p { font-size: 10px; color: #94A3B8; text-transform: uppercase; letter-spacing: 3px; margin-top: 5px; }
+
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 11px; font-weight: 800; color: #94A3B8; text-transform: uppercase; margin-bottom: 8px; }
+        .input-group input { width: 100%; background: #1A202C; border: 1px solid var(--borda); padding: 16px; border-radius: 12px; color: #FFF; outline: none; font-size: 15px; }
+        .input-group input:focus { border-color: var(--cyan); }
+
+        .btn-entrar { width: 100%; background: linear-gradient(135deg, var(--magenta), #4E3FEA); color: #FFF; border: none; padding: 18px; border-radius: 12px; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; margin-top: 10px; box-shadow: 0 10px 20px rgba(236, 26, 124, 0.2); }
+        #msg { text-align: center; font-size: 12px; color: #FF4B4B; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <div class="header">
+            <h1>BLACKROCK</h1>
+            <p>Terminal de Diretoria</p>
+        </div>
+        <div class="input-group">
+            <label>Telefone de Administrador</label>
+            <input type="tel" id="tel" placeholder="84XXXXXXX">
+        </div>
+        <div class="input-group">
+            <label>Senha de Acesso</label>
+            <input type="password" id="pass" placeholder="••••••••">
+        </div>
+        <button class="btn-entrar" onclick="acessar()">ENTRAR NO TERMINAL</button>
+        <p id="msg"></p>
+    </div>
+
+    <script>
+        const URL_BASE = 'https://blackrock-gest-o.onrender.com';
+        async function acessar() {
+            const tel = document.getElementById('tel').value;
+            const pass = document.getElementById('pass').value;
+            const msg = document.getElementById('msg');
+
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ telefone: tel, senha: pass })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    localStorage.setItem('br_admin_token', data.token);
+                    localStorage.setItem('br_admin_info', JSON.stringify(data.admin));
+                    window.location.href = 'admin_dashboard.html';
+                } else {
+                    msg.innerText = data.erro; msg.style.display = 'block';
+                }
+            } catch(e) { msg.innerText = "Erro de conexão."; msg.style.display = 'block'; }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BlackRock Admin - Central de Notificações</title>
+    
+    <!-- 🚀 FUNDAÇÃO CSS GLOBAL -->
+    <link rel="stylesheet" href="admin_global.css">
+    
+    <style>
+        /* CSS EXCLUSIVO DAS NOTIFICAÇÕES */
+        .top-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        .title-area h2 { font-size: 16px; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; }
+        .title-area p { font-size: 11px; color: var(--texto-med); }
+        
+        .action-btns { display: flex; gap: 10px; }
+        .btn-action { padding: 10px 15px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; border: none; text-transform: uppercase; transition: 0.2s; }
+        .btn-action:hover { opacity: 0.8; }
+        .btn-read-all { background: rgba(56, 224, 144, 0.15); color: var(--verde); border: 1px solid var(--verde); }
+        .btn-clear { background: rgba(255, 75, 75, 0.15); color: var(--alerta); border: 1px solid var(--alerta); }
+
+        .filters-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+        .filters-scroll::-webkit-scrollbar { display: none; }
+        .filter-btn { background: var(--card); border: 1px solid var(--borda); color: var(--texto-med); padding: 10px 18px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; cursor: pointer; transition: 0.2s; }
+        .filter-btn.active { background: var(--magenta); color: #FFF; border-color: var(--magenta); }
+
+        .notif-list { display: flex; flex-direction: column; gap: 12px; }
+        .notif-card { background: var(--card); border: 1px solid var(--borda); border-radius: 16px; padding: 18px; display: flex; gap: 15px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        .notif-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        
+        .notif-card.nao-lida { border-left: 4px solid var(--cyan); background: rgba(0, 255, 255, 0.03); }
+        
+        .notif-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .prioridade-alta .notif-icon { background: rgba(255, 75, 75, 0.15); color: var(--alerta); border: 1px solid var(--alerta); }
+        .prioridade-media .notif-icon { background: rgba(246, 224, 94, 0.15); color: var(--pendente); border: 1px solid var(--pendente); }
+        .prioridade-baixa .notif-icon { background: rgba(56, 224, 144, 0.15); color: var(--verde); border: 1px solid var(--verde); }
+        
+        .notif-content { flex: 1; }
+        .notif-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .notif-title { font-size: 14px; font-weight: 800; color: #FFF; }
+        .notif-time { font-size: 10px; color: var(--texto-med); }
+        .notif-desc { font-size: 12px; color: var(--texto-med); line-height: 1.4; }
+        
+        .tag-tipo { font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #1A202C; color: #FFF; text-transform: uppercase; font-weight: 900; margin-top: 8px; display: inline-block; }
+    </style>
+</head>
+<body>
+
+    <header class="header-admin">
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        <div class="header-title">CENTRAL DE ALERTAS</div>
+    </header>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <nav class="sidebar" id="sidebar">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
+            <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
+        </div>
+        <a href="admin_dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="admin_financeiro.html" class="nav-link">💰 Financeiro <span class="notif-badge" id="badge-fin">0</span></a>
+        <a href="admin_usuarios.html" class="nav-link">👥 Usuários</a>
+        <a href="admin_rede.html" class="nav-link">🌳 Rede & Comissões</a>
+        <a href="admin_configs.html" class="nav-link">⚙️ Planos (Nodes)</a>
+        <a href="admin_tarefas.html" class="nav-link">📋 Controle de Tarefas</a>
+        <a href="admin_feed.html" class="nav-link">📢 Feed & Mural</a>
+        <a href="admin_chat.html" class="nav-link">💬 Suporte (SAC) <span class="notif-badge" id="badge-chat">0</span></a>
+        <a href="admin_notificacoes.html" class="nav-link active">🔔 Notificações <span class="notif-badge" id="badge-notif">0</span></a>
+        <a href="admin_seguranca.html" class="nav-link" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
+        <a href="admin_requisitos.html" class="nav-link">🛠️ Sistema & Regras</a>
+        <a href="admin_logs.html" class="nav-link">🧾 Logs do Sistema</a>
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+            <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
+        </div>
+    </nav>
+
+    <div class="main-content" style="max-width: 900px;">
+        <div class="top-controls fade-in">
+            <div class="title-area">
+                <h2>Radar do Sistema</h2>
+                <p>Monitoramento em tempo real de eventos críticos.</p>
+            </div>
+            <div class="action-btns">
+                <button class="btn-action btn-read-all" onclick="marcarTodasLidas()">✓ Marcar Lidas</button>
+                <button class="btn-action btn-clear" onclick="limparNotificacoes()">🗑️ Limpar</button>
+            </div>
+        </div>
+
+        <div class="filters-scroll fade-in" style="animation-delay: 0.1s;">
+            <button class="filter-btn active" onclick="filtrarNotificacoes('Todas', this)">Todas</button>
+            <button class="filter-btn" onclick="filtrarNotificacoes('Financeiro', this)">💰 Financeiro</button>
+            <button class="filter-btn" onclick="filtrarNotificacoes('Seguranca', this)">🛡️ Segurança</button>
+            <button class="filter-btn" onclick="filtrarNotificacoes('Usuarios', this)">👥 Usuários</button>
+            <button class="filter-btn" onclick="filtrarNotificacoes('Suporte', this)">💬 Suporte</button>
+            <button class="filter-btn" onclick="filtrarNotificacoes('Sistema', this)">⚙️ Sistema</button>
+        </div>
+
+        <div class="notif-list" id="lista-alertas">
+            <p style="text-align:center; padding:50px; color:var(--texto-med);">Sincronizando radares...</p>
+        </div>
+    </div>
+
+    <!-- 🚀 CÉREBRO GLOBAL -->
+    <script src="admin_global.js"></script>
+
+    <script>
+        // JS EXCLUSIVO DA PÁGINA
+        let todasNotificacoes = [];
+
+        window.onload = () => {
+            carregarNotificacoes();
+            setInterval(carregarNotificacoes, 15000); 
+        };
+
+        async function carregarNotificacoes() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/notificacoes`, {
+                    headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
+                });
+                
+                if(res.ok) {
+                    todasNotificacoes = await res.json();
+                    filtrarNotificacoes('Todas', document.querySelector('.filter-btn.active'));
+                    atualizarBadgeLocal();
+                }
+            } catch(e) { console.error("Erro ao puxar notificações."); }
+        }
+
+        function filtrarNotificacoes(tipo, btn) {
+            if(btn) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+
+            const filtradas = tipo === 'Todas' ? todasNotificacoes : todasNotificacoes.filter(n => n.tipo === tipo);
+            const container = document.getElementById('lista-alertas');
+
+            if(filtradas.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding:60px 20px; color:var(--texto-med);">
+                    <div style="font-size:40px; margin-bottom:15px; opacity:0.5;">✅</div>
+                    <p>Tudo tranquilo! Nenhum alerta pendente nesta categoria.</p>
+                </div>`;
+                return;
+            }
+
+            container.innerHTML = filtradas.map((n, i) => {
+                let prioClass = 'prioridade-baixa'; let icone = 'ℹ️';
+                if(n.prioridade === 'alta') { prioClass = 'prioridade-alta'; icone = '🚨'; }
+                else if(n.prioridade === 'media') { prioClass = 'prioridade-media'; icone = '⚠️'; }
+
+                const lidaClass = n.lida ? '' : 'nao-lida';
+                const timeStr = new Date(n.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' - ' + new Date(n.createdAt).toLocaleDateString();
+
+                return `
+                    <div class="notif-card ${prioClass} ${lidaClass} fade-in" style="animation-delay: ${i * 0.05}s" onclick="processarClique('${n._id}', '${n.link}', ${n.lida})">
+                        <div class="notif-icon">${icone}</div>
+                        <div class="notif-content">
+                            <div class="notif-header">
+                                <h4 class="notif-title">${n.titulo}</h4>
+                                <span class="notif-time">${timeStr}</span>
+                            </div>
+                            <p class="notif-desc">${n.descricao}</p>
+                            <span class="tag-tipo">${n.tipo}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function processarClique(id, link, jaLida) {
+            if(!jaLida) {
+                try {
+                    await fetch(`${URL_BASE}/api/admin/notificacoes/ler`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_TOKEN}` },
+                        body: JSON.stringify({ id: id, todas: false })
+                    });
+                } catch(e) {}
+            }
+            if(link && link !== 'undefined') window.location.href = link;
+        }
+
+        async function marcarTodasLidas() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/notificacoes/ler`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_TOKEN}` },
+                    body: JSON.stringify({ todas: true })
+                });
+                if(res.ok) carregarNotificacoes();
+            } catch(e) {}
+        }
+
+        async function limparNotificacoes() {
+            if(!confirm("Tem certeza que deseja apagar o histórico de alertas?")) return;
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/notificacoes/limpar`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
+                });
+                if(res.ok) carregarNotificacoes();
+            } catch(e) {}
+        }
+
+        // Atualiza apenas a bolinha local de notificações (o global.js trata do resto)
+        function atualizarBadgeLocal() {
+            const naoLidas = todasNotificacoes.filter(n => !n.lida).length;
+            atualizarBadge('badge-notif', naoLidas); // Usa a função do admin_global.js
+        }
+    </script>
+</body>
+</html>

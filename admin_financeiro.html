@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BlackRock Admin - Financeiro Corporativo</title>
+    <style>
+        :root {
+            --bg: #07090D; --card: #0F1219; --magenta: #EC1A7C; --cyan: #00FFFF;
+            --verde: #38E090; --borda: #1A202C; --texto-med: #94A3B8; --alerta: #FF4B4B; --pendente: #F6E05E;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: var(--bg); color: #FFF; min-height: 100vh; padding-top: 70px; overflow-x: hidden; scroll-behavior: smooth; }
+
+        /* ANIMAÇÕES */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+
+        /* HEADER E SIDEBAR EXATAMENTE IGUAIS AO DASHBOARD */
+        .header-admin { position: fixed; top: 0; left: 0; width: 100%; height: 70px; background: rgba(15, 18, 25, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--borda); display: flex; align-items: center; padding: 0 20px; z-index: 1000; }
+        .menu-icon { font-size: 28px; cursor: pointer; color: var(--magenta); margin-right: 20px; }
+        .header-title { font-size: 18px; font-weight: 900; letter-spacing: 1px; }
+
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--card); border-right: 1px solid var(--borda); z-index: 2000; transition: 0.3s; padding: 30px 20px; display: flex; flex-direction: column; overflow-y: auto; }
+        .sidebar.active { left: 0; box-shadow: 20px 0 50px rgba(0,0,0,0.8); }
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1500; display: none; }
+        .sidebar-overlay.active { display: block; }
+        .nav-link { display: flex; align-items: center; gap: 12px; color: var(--texto-med); text-decoration: none; padding: 15px; border-radius: 12px; font-weight: 700; font-size: 14px; margin-bottom: 4px; transition: 0.2s; }
+        .nav-link.active { background: rgba(236, 26, 124, 0.1); color: var(--magenta); }
+        .nav-link:hover { color: #FFF; background: rgba(255,255,255,0.05); }
+        .notif-badge { background: var(--alerta); color: #FFF; font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 20px; margin-left: auto; display: none; }
+
+        /* ÁREA DE CONTEÚDO */
+        .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; padding-bottom: 100px; }
+        
+        /* CONTADORES SUPERIORES */
+        .grid-counters { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .counter-card { background: var(--card); border: 1px solid var(--borda); padding: 15px; border-radius: 16px; text-align: center; }
+        .counter-card h4 { font-size: 11px; color: var(--texto-med); text-transform: uppercase; margin-bottom: 5px; }
+        .counter-card p { font-size: 22px; font-weight: 900; color: var(--pendente); }
+
+        /* SISTEMA DE ABAS E FILTROS */
+        .controls-wrapper { background: var(--card); border: 1px solid var(--borda); border-radius: 16px; padding: 15px; margin-bottom: 20px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; background: #1A202C; border: 1px solid var(--borda); color: var(--texto-med); padding: 12px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { background: var(--magenta); color: #FFF; border-color: var(--magenta); }
+
+        .filters { display: flex; flex-direction: column; gap: 10px; }
+        .filters input, .filters select { width: 100%; background: #1A202C; border: 1px solid var(--borda); color: #FFF; padding: 12px; border-radius: 8px; font-size: 13px; outline: none; }
+        .filters input:focus, .filters select:focus { border-color: var(--cyan); }
+        
+        /* CARDS DE TRANSAÇÃO CORPORATIVOS */
+        .tx-card { background: var(--card); border: 1px solid var(--borda); border-radius: 16px; padding: 20px; margin-bottom: 15px; position: relative; overflow: hidden; }
+        .tx-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; border-bottom: 1px dashed var(--borda); padding-bottom: 15px; }
+        .tx-user h3 { font-size: 15px; color: #FFF; margin-bottom: 3px; }
+        .tx-user p { font-size: 11px; color: var(--texto-med); }
+        
+        .tx-badge { font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .status-pendente { background: rgba(246, 224, 94, 0.15); color: var(--pendente); border: 1px solid var(--pendente); }
+        .status-aprovado { background: rgba(56, 224, 144, 0.15); color: var(--verde); border: 1px solid var(--verde); }
+        .status-rejeitado { background: rgba(255, 75, 75, 0.15); color: var(--alerta); border: 1px solid var(--alerta); }
+
+        .tx-body { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 15px; }
+        .data-row { display: flex; justify-content: space-between; font-size: 12px; }
+        .data-row span { color: var(--texto-med); }
+        .data-row strong { color: #FFF; text-align: right; word-break: break-all; max-width: 60%; }
+        .val-destaque { font-size: 16px; font-weight: 900; color: var(--cyan); }
+
+        .btn-img { width: 100%; background: #1A202C; border: 1px solid var(--borda); color: var(--cyan); padding: 12px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px; transition: 0.3s; }
+        .btn-img:hover { background: rgba(0, 255, 255, 0.1); }
+
+        .tx-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-act { padding: 12px; border: none; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; color: #FFF; text-transform: uppercase; transition: 0.3s; }
+        .btn-act:active { transform: scale(0.98); }
+        .btn-approve { background: var(--verde); color: #000; }
+        .btn-reject { background: #E53E3E; }
+        .btn-fraud { background: #742A2A; grid-column: span 2; }
+        
+        .motivo-box { background: rgba(255, 75, 75, 0.1); border-left: 3px solid var(--alerta); padding: 10px; font-size: 11px; color: #FFF; margin-bottom: 15px; border-radius: 4px; }
+
+        /* MODAIS */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; padding: 20px; }
+        .modal img { max-width: 100%; max-height: 80vh; border-radius: 12px; border: 2px solid var(--magenta); }
+        .btn-close-modal { margin-top: 20px; background: var(--card); color: #FFF; border: 1px solid var(--borda); padding: 12px 30px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; max-width: 300px; }
+    </style>
+</head>
+<body>
+
+    <header class="header-admin">
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        <div class="header-title">CAIXA CENTRAL</div>
+    </header>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <nav class="sidebar" id="sidebar">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
+            <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
+        </div>
+        <a href="admin_dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="admin_financeiro.html" class="nav-link active">💰 Financeiro <span class="notif-badge" id="badge-fin">0</span></a>
+        <a href="admin_usuarios.html" class="nav-link">👥 Usuários</a>
+        <a href="admin_rede.html" class="nav-link">🌳 Rede & Comissões</a>
+        <a href="admin_configs.html" class="nav-link">⚙️ Planos (Nodes)</a>
+        <a href="admin_tarefas.html" class="nav-link">📋 Controle de Tarefas</a>
+        <a href="admin_feed.html" class="nav-link">📢 Feed & Mural</a>
+        <a href="admin_chat.html" class="nav-link">💬 Suporte (SAC) <span class="notif-badge" id="badge-chat">0</span></a>
+        <a href="admin_notificacoes.html" class="nav-link">🔔 Notificações <span class="notif-badge" id="badge-notif">0</span></a>
+        <a href="admin_seguranca.html" class="nav-link" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
+        <a href="admin_requisitos.html" class="nav-link">🛠️ Sistema & Regras</a>
+        <a href="admin_logs.html" class="nav-link">🧾 Logs do Sistema</a>
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+            <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
+        </div>
+    </nav>
+    
+    <div class="main-content">
+        <div class="grid-counters fade-in">
+            <div class="counter-card"><h4>Depósitos Pendentes</h4><p id="count-dep">0</p></div>
+            <div class="counter-card"><h4>Saques Pendentes</h4><p id="count-saq">0</p></div>
+        </div>
+
+        <div class="controls-wrapper fade-in" style="animation-delay: 0.1s;">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="mudarAba('deposito', this)">📥 DEPÓSITOS</button>
+                <button class="tab-btn" onclick="mudarAba('saque', this)">📤 SAQUES</button>
+            </div>
+            <div class="filters">
+                <input type="text" id="buscaTx" placeholder="🔍 Buscar por Nome, ID ou TXID..." onkeyup="aplicarFiltros()">
+                <select id="filtroStatus" onchange="aplicarFiltros()">
+                    <option value="pendente">⏳ Fila de Pendentes</option>
+                    <option value="aprovado">✅ Histórico: Aprovados/Pagos</option>
+                    <option value="rejeitado">❌ Histórico: Rejeitados</option>
+                </select>
+            </div>
+        </div>
+
+        <p style="font-size: 11px; color: var(--texto-med); margin-bottom: 15px; text-align: right; font-style: italic;">
+            * Exibindo os últimos 300 registos para garantir máxima velocidade do sistema.
+        </p>
+
+        <div id="lista-transacoes">
+            <p style="text-align:center; color:var(--texto-med); padding:30px;">Sincronizando livro financeiro...</p>
+        </div>
+    </div>
+
+    <div class="modal" id="modalImg">
+        <img id="imgComprovativo" src="" alt="Comprovativo">
+        <button class="btn-close-modal" onclick="fecharImg()">FECHAR ZOOM</button>
+    </div>
+
+    <script>
+        const URL_BASE = 'https://blackrock-gest-o.onrender.com';
+        let todasTxs = [];
+        let abaAtual = 'deposito';
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
+        function logout() { localStorage.removeItem('br_admin_token'); window.location.href = 'admin_login.html'; }
+
+        window.onload = () => {
+            if(!localStorage.getItem('br_admin_token')) window.location.href = 'admin_login.html';
+            carregarTransacoes();
+            verificarAlertas();
+            setInterval(carregarTransacoes, 15000); 
+        };
+
+        async function carregarTransacoes() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/transacoes-todas`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('br_admin_token')}` }
+                });
+                if(res.ok) {
+                    todasTxs = await res.json();
+                    atualizarContadores();
+                    aplicarFiltros();
+                }
+            } catch(e) { console.error("Erro ao puxar financeiro."); }
+        }
+
+        function atualizarContadores() {
+            const dep = todasTxs.filter(t => t.tipo === 'deposito' && t.status === 'pendente').length;
+            const saq = todasTxs.filter(t => t.tipo === 'saque' && t.status === 'pendente').length;
+            document.getElementById('count-dep').innerText = dep;
+            document.getElementById('count-saq').innerText = saq;
+        }
+
+        function mudarAba(aba, btn) {
+            abaAtual = aba;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('filtroStatus').value = 'pendente';
+            aplicarFiltros();
+        }
+
+        function aplicarFiltros() {
+            const statusFiltro = document.getElementById('filtroStatus').value;
+            const busca = document.getElementById('buscaTx').value.toLowerCase();
+            const container = document.getElementById('lista-transacoes');
+
+            let filtrados = todasTxs.filter(t => t.tipo === abaAtual && t.status === statusFiltro);
+
+            if(busca) {
+                filtrados = filtrados.filter(t => 
+                    (t.nomeUsuario && t.nomeUsuario.toLowerCase().includes(busca)) ||
+                    (t.idUnicoUsuario && t.idUnicoUsuario.toString().includes(busca)) ||
+                    (t.idTransacaoBancaria && t.idTransacaoBancaria.toLowerCase().includes(busca))
+                );
+            }
+
+            if(filtrados.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:var(--texto-med); padding:30px;">Nenhum registo encontrado nesta secção.</p>`;
+                return;
+            }
+
+            container.innerHTML = filtrados.map((tx, index) => {
+                const dataTx = new Date(tx.createdAt).toLocaleString('pt-PT');
+                let classeStatus = 'status-pendente'; let textoStatus = 'PENDENTE';
+                if(tx.status === 'aprovado') { classeStatus = 'status-aprovado'; textoStatus = abaAtual === 'saque' ? 'PAGO' : 'APROVADO'; }
+                if(tx.status === 'rejeitado') { classeStatus = 'status-rejeitado'; textoStatus = 'REJEITADO'; }
+
+                let detalhesHtml = '';
+                if(abaAtual === 'deposito') {
+                    detalhesHtml = `
+                        <div class="data-row"><span>Operadora:</span> <strong>${tx.operadora || 'N/D'}</strong></div>
+                        <div class="data-row"><span>Enviado de (Nº):</span> <strong>${tx.numeroTransferencia || tx.numeroOrigem || 'N/D'}</strong></div>
+                        <div class="data-row"><span>TXID:</span> <strong style="color:var(--cyan)">${tx.idTransacaoBancaria || 'N/D'}</strong></div>
+                        <div class="data-row"><span>Data/Hora:</span> <strong>${dataTx}</strong></div>
+                    `;
+                } else {
+                    const taxaReal = tx.taxaAplicada !== undefined ? tx.taxaAplicada : 10;
+                    const cortadoReal = tx.valorTaxa !== undefined ? tx.valorTaxa : (tx.valor * 0.10);
+                    
+                    detalhesHtml = `
+                        <div class="data-row"><span>Titular Conta:</span> <strong>${tx.nomeContaDestino || 'N/D'}</strong></div>
+                        <div class="data-row"><span>Nº Destino:</span> <strong style="color:var(--magenta)">${tx.numeroContaDestino || 'N/D'}</strong></div>
+                        <div class="data-row"><span>Operadora:</span> <strong>${tx.operadora || 'M-Pesa'}</strong></div>
+                        <div class="data-row"><span>Valor Solicitado (Bruto):</span> <strong>${tx.valor.toLocaleString('pt-MZ')} MZN</strong></div>
+                        <div class="data-row"><span>Taxa Aplicada (${taxaReal}%):</span> <strong style="color:var(--alerta)">-${Number(cortadoReal).toLocaleString('pt-MZ')} MZN</strong></div>
+                        <div class="data-row"><span>Data/Hora:</span> <strong>${dataTx}</strong></div>
+                    `;
+                }
+
+                let botoesHtml = '';
+                if(tx.status === 'pendente') {
+                    botoesHtml = `
+                        <div class="tx-actions">
+                            <button class="btn-act btn-approve" onclick="processar('${tx._id}', 'aprovado')">${abaAtual === 'saque' ? 'MARCAR COMO PAGO' : 'APROVAR DEPÓSITO'}</button>
+                            <button class="btn-act btn-reject" onclick="processar('${tx._id}', 'rejeitado')">REJEITAR</button>
+                            ${abaAtual === 'deposito' ? `<button class="btn-act btn-fraud" onclick="processar('${tx._id}', 'fraude')">MARCAR COMO FRAUDE</button>` : `<button class="btn-act btn-fraud" onclick="processar('${tx._id}', 'fraude')">SUSPEITO (ENVIAR P/ SEGURANÇA)</button>`}
+                        </div>
+                    `;
+                } else if(tx.motivoRejeicao) {
+                    botoesHtml = `<div class="motivo-box"><strong>Motivo da Rejeição:</strong> ${tx.motivoRejeicao}</div>`;
+                }
+
+                const liquidoReal = tx.valorLiquido !== undefined ? tx.valorLiquido : (tx.valor * 0.90);
+
+                return `
+                    <div class="tx-card fade-in" style="animation-delay: ${index * 0.05}s">
+                        <div class="tx-header">
+                            <div class="tx-user">
+                                <h3>${tx.nomeUsuario || 'Usuário Desconhecido'}</h3>
+                                <p>ID: ${tx.idUnicoUsuario || 'N/D'} • Tel: ${tx.telefoneUsuario || 'N/D'}</p>
+                            </div>
+                            <div class="tx-badge ${classeStatus}">${textoStatus}</div>
+                        </div>
+                        <div class="tx-body">
+                            ${detalhesHtml}
+                            <div class="data-row" style="margin-top:10px; border-top:1px solid var(--borda); padding-top:10px;">
+                                <span>${abaAtual === 'saque' ? 'Valor a Pagar (LÍQUIDO):' : 'Valor a Creditar:'}</span> 
+                                <strong class="val-destaque">${abaAtual === 'saque' ? Number(liquidoReal).toLocaleString('pt-MZ') : Number(tx.valor).toLocaleString('pt-MZ')} MZN</strong>
+                            </div>
+                        </div>
+                        ${tx.comprovanteBase64 ? `<button class="btn-img" onclick="verImg('${tx.comprovanteBase64}')">📸 VER COMPROVATIVO EM TELA CHEIA</button>` : ''}
+                        ${botoesHtml}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function processar(id, acao) {
+            let motivo = '';
+            if(acao === 'rejeitado') {
+                motivo = prompt("Motivo OBRIGATÓRIO da rejeição (Será enviado ao usuário via notificação):");
+                if(!motivo) { alert("Operação cancelada. O motivo é obrigatório."); return; }
+            } else {
+                if(!confirm(`Confirma a ação: ${acao.toUpperCase()}?`)) return;
+            }
+            
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/processar-transacao`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('br_admin_token')}` },
+                    body: JSON.stringify({ transacaoId: id, acao: acao, motivoRejeicao: motivo })
+                });
+                if(res.ok) { carregarTransacoes(); } 
+                else { const err = await res.json(); alert("Erro: " + err.erro); }
+            } catch(e) { alert("Erro de comunicação com o servidor."); }
+        }
+
+        function verImg(base64) { document.getElementById('imgComprovativo').src = base64; document.getElementById('modalImg').style.display = 'flex'; }
+        function fecharImg() { document.getElementById('modalImg').style.display = 'none'; }
+
+        async function verificarAlertas() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/alertas-globais`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('br_admin_token')}` } });
+                const dados = await res.json();
+                const bFin = document.getElementById('badge-fin'); 
+                const bChat = document.getElementById('badge-chat');
+                const bNotif = document.getElementById('badge-notif');
+
+                if(bFin) { if(dados.financeiro > 0) { bFin.innerText = dados.financeiro; bFin.style.display = 'inline-block'; } else { bFin.style.display = 'none'; } }
+                if(bChat) { if(dados.chat > 0) { bChat.innerText = dados.chat; bChat.style.display = 'inline-block'; } else { bChat.style.display = 'none'; } }
+                if(bNotif) { if(dados.notificacoes > 0) { bNotif.innerText = dados.notificacoes; bNotif.style.display = 'inline-block'; } else { bNotif.style.display = 'none'; } }
+            } catch(e) { 
+                console.error("Falha na sincronização do Radar Global."); 
+            }
+        }
+
+        if(typeof setInterval !== 'undefined') {
+            setInterval(verificarAlertas, 15000);
+        }
+    </script>
+</body>
+</html>

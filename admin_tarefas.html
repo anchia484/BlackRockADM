@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BlackRock Admin - Controle de Tarefas</title>
+    
+    <!-- 🚀 FUNDAÇÃO CSS GLOBAL -->
+    <link rel="stylesheet" href="admin_global.css">
+    
+    <style>
+        /* CSS EXCLUSIVO DE TAREFAS */
+        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+        .card-stat { background: var(--card); border: 1px solid var(--borda); padding: 20px; border-radius: 18px; text-align: center; }
+        .card-stat span { font-size: 10px; color: var(--texto-med); text-transform: uppercase; display: block; margin-bottom: 8px; }
+        .card-stat strong { font-size: 18px; color: var(--cyan); }
+
+        .table-container { background: var(--card); border: 1px solid var(--borda); border-radius: 20px; overflow: hidden; margin-top: 20px; }
+        .table-header { padding: 15px 20px; border-bottom: 1px solid var(--borda); display: flex; justify-content: space-between; align-items: center; }
+        .exec-item { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .exec-item:hover { background: rgba(255,255,255,0.02); }
+        .exec-item:last-child { border-bottom: none; }
+        .exec-info h4 { font-size: 13px; color: #FFF; margin-bottom: 3px;}
+        .exec-info p { font-size: 10px; color: var(--texto-med); }
+        .exec-val { font-size: 13px; font-weight: 800; color: var(--verde); }
+
+        @keyframes pulse-live { 0% { opacity: 0.5; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.5; transform: scale(0.9); } }
+        .live-dot { display: inline-block; width: 8px; height: 8px; background: var(--verde); border-radius: 50%; animation: pulse-live 1.5s infinite; }
+    </style>
+</head>
+<body>
+    <header class="header-admin">
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        <div class="header-title">CENTRAL DE TAREFAS</div>
+    </header>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <nav class="sidebar" id="sidebar">
+        <!-- MENU NATIVO INTACTO -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
+            <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
+        </div>
+        <a href="admin_dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="admin_financeiro.html" class="nav-link">💰 Financeiro <span class="notif-badge" id="badge-fin">0</span></a>
+        <a href="admin_usuarios.html" class="nav-link">👥 Usuários</a>
+        <a href="admin_rede.html" class="nav-link">🌳 Rede & Comissões</a>
+        <a href="admin_configs.html" class="nav-link">⚙️ Planos (Nodes)</a>
+        <a href="admin_tarefas.html" class="nav-link active">📋 Controle de Tarefas</a>
+        <a href="admin_feed.html" class="nav-link">📢 Feed & Mural</a>
+        <a href="admin_chat.html" class="nav-link">💬 Suporte (SAC) <span class="notif-badge" id="badge-chat">0</span></a>
+        <a href="admin_notificacoes.html" class="nav-link">🔔 Notificações <span class="notif-badge" id="badge-notif">0</span></a>
+        <a href="admin_seguranca.html" class="nav-link" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
+        <a href="admin_requisitos.html" class="nav-link">🛠️ Sistema & Regras</a>
+        <a href="admin_logs.html" class="nav-link">🧾 Logs do Sistema</a>
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+            <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="grid-stats fade-in">
+            <div class="card-stat">
+                <span>Execuções (Hoje)</span>
+                <strong id="stat-exec">0</strong>
+            </div>
+            <div class="card-stat">
+                <span>Total Pago (Hoje)</span>
+                <strong id="stat-pago">0 MZN</strong>
+            </div>
+            <div class="card-stat">
+                <span>Média Usuário</span>
+                <strong id="stat-media">0.00 MZN</strong>
+            </div>
+            <div class="card-stat">
+                <span>Mineradores Ativos</span>
+                <strong id="stat-ativos" style="color: var(--verde);">0</strong>
+            </div>
+        </div>
+
+        <div class="table-container fade-in" style="animation-delay: 0.1s;">
+            <div class="table-header">
+                <h3 style="font-size: 14px; text-transform: uppercase; color: var(--cyan);">Últimas Execuções</h3>
+                <span style="font-size: 10px; color: var(--verde); font-weight: bold; display: flex; align-items: center; gap: 5px;">
+                    <span class="live-dot"></span> LIVE
+                </span>
+            </div>
+            <div id="lista-execucoes">
+                <p style="text-align:center; padding:30px; color:var(--texto-med);">A conectar ao terminal de mineração...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🚀 CÉREBRO GLOBAL -->
+    <script src="admin_global.js"></script>
+
+    <script>
+        // JS EXCLUSIVO DA PÁGINA (Apenas buscar estatísticas e histórico)
+        window.onload = () => {
+            carregarDashboardTarefas();
+            setInterval(carregarDashboardTarefas, 15000); // Atualiza dados ao vivo a cada 15s
+        };
+
+        async function carregarDashboardTarefas() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/tarefas/estatisticas`, {
+                    headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
+                });
+                if(res.ok) {
+                    const data = await res.json();
+                    document.getElementById('stat-exec').innerText = data.execucoesHoje;
+                    document.getElementById('stat-pago').innerText = Number(data.totalPago).toLocaleString() + " MZN";
+                    document.getElementById('stat-media').innerText = data.mediaGanhos + " MZN";
+                    document.getElementById('stat-ativos').innerText = data.usuariosAtivos;
+
+                    carregarHistorico(); // Carrega a lista logo após pegar os status
+                }
+            } catch(e) { console.error("Erro ao carregar métricas do terminal."); }
+        }
+
+        async function carregarHistorico() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/transacoes/tarefas`, {
+                    headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
+                });
+                if(res.ok) {
+                    const tarefas = await res.json();
+                    const container = document.getElementById('lista-execucoes');
+                    
+                    container.innerHTML = tarefas.map(t => `
+                        <div class="exec-item">
+                            <div class="exec-info">
+                                <h4>${t.usuarioNome}</h4>
+                                <p>${t.planoNome} • ${new Date(t.data).toLocaleTimeString('pt-PT')}</p>
+                            </div>
+                            <div class="exec-val">+ ${t.valor.toFixed(2)} MZN</div>
+                        </div>
+                    `).join('') || '<p style="text-align:center; padding:30px; color:var(--texto-med);">O terminal está silencioso. Nenhuma tarefa registada hoje.</p>';
+                }
+            } catch(e) { console.error("Erro ao carregar feed de execuções."); }
+        }
+    </script>
+</body>
+</html>

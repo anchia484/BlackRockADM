@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BlackRock Admin - Gestão de Nodes Inteligentes</title>
+    
+    <!-- 🚀 FUNDAÇÃO CSS GLOBAL -->
+    <link rel="stylesheet" href="admin_global.css">
+
+    <style>
+        /* CSS EXCLUSIVO DOS NODES E PLANOS */
+        .grid-resumo { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+        .card-mini { background: var(--card); border: 1px solid var(--borda); padding: 15px; border-radius: 16px; text-align: center; }
+        .card-mini span { font-size: 10px; color: var(--texto-med); text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .card-mini strong { font-size: 16px; color: var(--cyan); }
+
+        .tabs-niveis { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+        .tab-btn { background: #1A202C; border: 1px solid var(--borda); color: var(--texto-med); padding: 12px 20px; border-radius: 12px; font-weight: 800; font-size: 11px; white-space: nowrap; cursor: pointer; }
+        .tab-btn.active { background: var(--magenta); color: #FFF; border-color: var(--magenta); }
+
+        .node-card { background: var(--card); border: 1px solid var(--borda); border-radius: 20px; padding: 20px; margin-bottom: 15px; position: relative; overflow: hidden; }
+        .node-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .node-header h3 { font-size: 18px; color: #FFF; }
+        .node-price { font-size: 18px; font-weight: 900; color: var(--verde); display: flex; flex-direction: column; align-items: flex-end; }
+        .perc-badge { font-size: 10px; background: rgba(0, 255, 255, 0.1); color: var(--cyan); padding: 3px 8px; border-radius: 6px; margin-top: 4px; font-weight: 900; }
+        
+        .node-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; color: var(--texto-med); }
+        .node-info b { color: #FFF; }
+        
+        .node-footer { display: flex; gap: 10px; border-top: 1px solid var(--borda); padding-top: 15px; }
+        .btn-node { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer; text-transform: uppercase; }
+        .btn-edit { background: #1A202C; color: var(--cyan); border: 1px solid var(--borda); }
+        .btn-users { background: rgba(0, 255, 255, 0.1); color: var(--cyan); }
+    </style>
+</head>
+<body>
+    <header class="header-admin">
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        <div class="header-title">GESTÃO DE NODES (INTELIGÊNCIA %)</div>
+    </header>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <nav class="sidebar" id="sidebar">
+        <!-- MENU NATIVO -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
+            <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
+        </div>
+        <a href="admin_dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="admin_financeiro.html" class="nav-link">💰 Financeiro <span class="notif-badge" id="badge-fin">0</span></a>
+        <a href="admin_usuarios.html" class="nav-link">👥 Usuários</a>
+        <a href="admin_rede.html" class="nav-link">🌳 Rede & Comissões</a>
+        <a href="admin_configs.html" class="nav-link active">⚙️ Planos (Nodes)</a>
+        <a href="admin_tarefas.html" class="nav-link">📋 Controle de Tarefas</a>
+        <a href="admin_feed.html" class="nav-link">📢 Feed & Mural</a>
+        <a href="admin_chat.html" class="nav-link">💬 Suporte (SAC) <span class="notif-badge" id="badge-chat">0</span></a>
+        <a href="admin_notificacoes.html" class="nav-link">🔔 Notificações <span class="notif-badge" id="badge-notif">0</span></a>
+        <a href="admin_seguranca.html" class="nav-link" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
+        <a href="admin_requisitos.html" class="nav-link">🛠️ Sistema & Regras</a>
+        <a href="admin_logs.html" class="nav-link">🧾 Logs do Sistema</a>
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+            <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="grid-resumo fade-in">
+            <div class="card-mini"><span>Nodes Ativos</span><strong id="st-total">0</strong></div>
+            <div class="card-mini"><span>Capital em Nodes</span><strong id="st-capital">0 MZN</strong></div>
+        </div>
+
+        <div class="tabs-niveis fade-in">
+            <button class="tab-btn active" onclick="filtrarNivel('STANDARD', this)">STANDARD (5 Tarefas)</button>
+            <button class="tab-btn" onclick="filtrarNivel('PREMIUM PLUS', this)">PREMIUM PLUS (10 Tarefas)</button>
+            <button class="tab-btn" onclick="filtrarNivel('VIP GOLD', this)">VIP GOLD (15 Tarefas)</button>
+        </div>
+
+        <div id="lista-planos">
+            <p style="text-align:center; padding:30px; color:var(--texto-med);">Sincronizando Matemática dos Nodes...</p>
+        </div>
+
+        <button class="btn-node" style="background:var(--verde); color:#000; width:100%; margin-top:20px; padding:18px; font-size:13px;" onclick="abrirForm()">➕ CRIAR NODE COM % INTELIGENTE</button>
+    </div>
+
+    <!-- MODAL DE CRIAÇÃO/EDIÇÃO DE NODE -->
+    <div id="modalForm" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:var(--card); border:1px solid var(--borda); width:100%; max-width:500px; border-radius:20px; padding:25px;">
+            <h2 id="form-title" style="font-size:18px; color:var(--cyan); margin-bottom:20px;">Configurar Node</h2>
+            <input type="hidden" id="node-id">
+            
+            <div style="display:grid; gap:15px;">
+                <input type="text" id="node-nome" placeholder="Nome (Ex: NODE 1)" style="width:100%; background:#1A202C; border:1px solid var(--borda); color:#FFF; padding:12px; border-radius:10px; outline:none;">
+                
+                <select id="node-nivel" style="width:100%; background:#1A202C; border:1px solid var(--borda); color:#FFF; padding:12px; border-radius:10px;">
+                    <option value="STANDARD">STANDARD (5 Tarefas)</option>
+                    <option value="PREMIUM PLUS">PREMIUM PLUS (10 Tarefas)</option>
+                    <option value="VIP GOLD">VIP GOLD (15 Tarefas)</option>
+                </select>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div>
+                        <label style="font-size:10px; color:var(--texto-med);">Valor de Entrada (MZN)</label>
+                        <input type="number" id="node-valor" oninput="calcularGanhos()" style="width:100%; background:#1A202C; border:1px solid var(--borda); color:#FFF; padding:12px; border-radius:10px;">
+                    </div>
+                    <div>
+                        <label style="font-size:10px; color:var(--texto-med);">Percentagem Diária (%)</label>
+                        <input type="number" id="node-perc" step="0.1" max="50" placeholder="Ex: 4" oninput="calcularGanhos()" style="width:100%; background:rgba(236, 26, 124, 0.1); border:1px solid var(--magenta); color:#FFF; padding:12px; border-radius:10px;">
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size:10px; color:var(--texto-med);">Duração (Dias)</label>
+                    <input type="number" id="node-dura" oninput="calcularGanhos()" style="width:100%; background:#1A202C; border:1px solid var(--borda); color:#FFF; padding:12px; border-radius:10px;">
+                </div>
+
+                <div>
+                    <label style="font-size:10px; color:var(--texto-med);">Ganho Diário (Bloqueado/Automático)</label>
+                    <input type="number" id="node-ganho" readonly style="width:100%; background:#000; border:1px dashed var(--verde); color:var(--verde); padding:12px; border-radius:10px; font-weight:900;">
+                    <div id="calc-display" style="font-size:11px; color:var(--cyan); margin-top:8px; padding:8px; background:rgba(0, 255, 255, 0.05); border-radius:6px; border-left:3px solid var(--cyan);">
+                        Preencha o valor e a percentagem para calcular.
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn-node" style="background:var(--verde); color:#000;" onclick="salvarNode()">GRAVAR NODE</button>
+                <button class="btn-node" style="background:#333; color:#FFF;" onclick="fecharForm()">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE USUÁRIOS NO PLANO -->
+    <div id="modalUsers" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:var(--card); border:1px solid var(--borda); width:100%; max-width:600px; border-radius:20px; padding:25px; max-height:80vh; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h2 id="user-title" style="font-size:16px; color:var(--magenta);">Usuários Ativos</h2>
+                <button onclick="document.getElementById('modalUsers').style.display='none'" style="background:none; border:none; color:#FFF; font-weight:900;">X</button>
+            </div>
+            <div id="user-list"></div>
+        </div>
+    </div>
+
+    <!-- 🚀 CÉREBRO GLOBAL -->
+    <script src="admin_global.js"></script>
+
+    <script>
+        // O código JS exclusivo das Configs dos Nodes (Regras Intocadas)
+        let todosPlanos = [];
+        let nivelAtual = 'STANDARD';
+
+        window.onload = () => {
+            carregarDados();
+        };
+
+        async function carregarDados() {
+            try {
+                // Utilizando a variável ADMIN_TOKEN do admin_global.js
+                const res = await fetch(`${URL_BASE}/api/admin/planos/resumo`, { 
+                    headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } 
+                });
+                const data = await res.json();
+                todosPlanos = data.planos;
+                document.getElementById('st-total').innerText = todosPlanos.length;
+                document.getElementById('st-capital').innerText = Number(data.totalInvestido).toLocaleString() + " MZN";
+                filtrarNivel(nivelAtual, document.querySelector('.tab-btn.active'));
+            } catch(e) { console.error(e); }
+        }
+
+        function filtrarNivel(nivel, btn) {
+            nivelAtual = nivel;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const filtrados = todosPlanos.filter(p => p.nivel === nivel);
+            const container = document.getElementById('lista-planos');
+            
+            if(filtrados.length === 0) {
+                container.innerHTML = `<p style="text-align:center; padding:30px; color:var(--texto-med);">Nenhum node criado neste estrato.</p>`;
+                return;
+            }
+
+            container.innerHTML = filtrados.map(p => {
+                const pct = p.percentagem ? p.percentagem : ((p.ganhoDiario / p.valor) * 100).toFixed(1);
+                
+                return `
+                <div class="node-card fade-in">
+                    <div class="node-header">
+                        <h3>${p.nome}</h3>
+                        <div class="node-price">
+                            ${p.valor.toLocaleString()} MZN
+                            <span class="perc-badge">${pct}% AO DIA</span>
+                        </div>
+                    </div>
+                    <div class="node-info">
+                        <div>Rendimento: <b>${p.ganhoDiario.toLocaleString()} MZN/dia</b></div>
+                        <div>Duração: <b>${p.duracao} Dias</b></div>
+                        <div>Ganho Total: <b style="color:var(--verde)">${p.ganhoTotal.toLocaleString()} MZN</b></div>
+                        <div>Tarefas: <b>${p.tarefas}</b></div>
+                    </div>
+                    <div style="font-size:10px; color:var(--cyan); margin-bottom:15px; text-transform:uppercase;">
+                        👥 <b>${p.usuariosAtivos}</b> Usuários Investindo
+                    </div>
+                    <div class="node-footer">
+                        <button class="btn-node btn-edit" onclick="abrirEdicao('${p._id}')">Ajustar Regras</button>
+                        <button class="btn-node" style="background: var(--alerta); color: #FFF; margin-left: 5px;" onclick="apagarNode('${p._id}', '${p.nome}')">Apagar</button>
+                        <button class="btn-node btn-users" onclick="verUsuarios('${p.nome}')">Ver Clientes</button>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        function calcularGanhos() {
+            const valor = Number(document.getElementById('node-valor').value) || 0;
+            let perc = Number(document.getElementById('node-perc').value) || 0;
+            const dura = Number(document.getElementById('node-dura').value) || 0;
+
+            if(perc > 50) { 
+                alert("Aviso: Limite de segurança atingido. A percentagem máxima permitida por segurança é de 50%.");
+                perc = 50;
+                document.getElementById('node-perc').value = 50;
+            }
+
+            const ganhoDiario = (valor * perc) / 100;
+            const ganhoTotal = ganhoDiario * dura;
+
+            document.getElementById('node-ganho').value = ganhoDiario.toFixed(2);
+            document.getElementById('calc-display').innerHTML = `Sistema Automático: <br><strong style="color:#FFF;">${perc}%</strong> ao dia = <strong style="color:var(--verde);">${ganhoDiario.toFixed(2)} MZN/dia</strong> <br>Retorno Total Previsto: <strong style="color:var(--cyan);">${ganhoTotal.toFixed(2)} MZN</strong>`;
+        }
+
+        function abrirForm() { 
+            document.getElementById('node-id').value = ''; 
+            document.getElementById('node-nome').value = '';
+            document.getElementById('node-valor').value = '';
+            document.getElementById('node-perc').value = '';
+            document.getElementById('node-dura').value = '';
+            document.getElementById('node-ganho').value = '';
+            document.getElementById('form-title').innerText = 'Novo Node';
+            document.getElementById('calc-display').innerText = 'Preencha o valor e a percentagem para calcular.';
+            document.getElementById('modalForm').style.display = 'flex'; 
+        }
+
+        function abrirEdicao(id) {
+            const p = todosPlanos.find(x => x._id === id);
+            document.getElementById('node-id').value = p._id;
+            document.getElementById('node-nome').value = p.nome;
+            document.getElementById('node-nivel').value = p.nivel;
+            document.getElementById('node-valor').value = p.valor;
+            document.getElementById('node-perc').value = p.percentagem || ((p.ganhoDiario / p.valor) * 100).toFixed(1);
+            document.getElementById('node-dura').value = p.duracao;
+            document.getElementById('form-title').innerText = 'Editar ' + p.nome;
+            calcularGanhos(); 
+            document.getElementById('modalForm').style.display = 'flex';
+        }
+
+        async function salvarNode() {
+            const perc = Number(document.getElementById('node-perc').value);
+            if(perc < 0.1) return alert("A percentagem diária não pode ser menor que 0.1%.");
+
+            const valorNum = Number(document.getElementById('node-valor').value);
+            const duracaoNum = Number(document.getElementById('node-dura').value);
+            const nivelStr = document.getElementById('node-nivel').value;
+            const nomeNode = document.getElementById('node-nome').value;
+
+            const ganhoDiarioNum = (valorNum * perc) / 100;
+            const ganhoTotalNum = ganhoDiarioNum * duracaoNum;
+
+            let tarefasNum = 5; 
+            if(nivelStr === 'PREMIUM PLUS') tarefasNum = 10;
+            if(nivelStr === 'VIP GOLD') tarefasNum = 15;
+
+            const payload = {
+                nome: nomeNode,
+                nivel: nivelStr,
+                valor: valorNum,
+                percentagem: perc,
+                duracao: duracaoNum,
+                ganhoDiario: ganhoDiarioNum,
+                ganhoTotal: ganhoTotalNum,
+                tarefas: tarefasNum,
+                validade: duracaoNum, // Lógica mantida intacta
+                ganhoDia: ganhoDiarioNum,
+                sessoes: tarefasNum 
+            };
+
+            const idNode = document.getElementById('node-id').value;
+            if (idNode && idNode.trim() !== "") {
+                payload.id = idNode;
+            }
+            
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/planos/salvar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_TOKEN}` },
+                    body: JSON.stringify(payload)
+                });
+                
+                if(res.ok) { 
+                    alert("Plano Salvo com Sucesso!"); 
+                    location.reload(); 
+                } else { 
+                    const err = await res.json(); 
+                    alert("O SERVIDOR REJEITOU PORQUE: " + JSON.stringify(err)); 
+                }
+            } catch(e) {
+                alert("Falha de conexão. O servidor pode estar desligado.");
+            }
+        }        
+
+        async function verUsuarios(nomeNode) {
+            const res = await fetch(`${URL_BASE}/api/admin/planos/usuarios/${nomeNode}`, { 
+                headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } 
+            });
+            const users = await res.json();
+            document.getElementById('user-title').innerText = `Clientes em ${nomeNode}`;
+            document.getElementById('user-list').innerHTML = users.map(u => `
+                <div style="padding:15px; border-bottom:1px solid #1A202C; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:12px;"><b>${u.nome}</b><br><span style="color:gray;">ID: ${u.idUnico}</span></div>
+                    <div style="font-size:11px; text-align:right;">Expira em:<br><b>${new Date(u.dataExpiracaoPlano).toLocaleDateString()}</b></div>
+                </div>
+            `).join('') || '<p style="color:gray; padding:20px;">Nenhum usuário neste plano.</p>';
+            document.getElementById('modalUsers').style.display = 'flex';
+        }
+
+        function fecharForm() { document.getElementById('modalForm').style.display = 'none'; }
+
+        async function apagarNode(id, nome) {
+            if(!confirm(`Tem a certeza que deseja APAGAR DEFINITIVAMENTE o plano ${nome}?`)) return;
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/planos/apagar/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
+                });
+                if(res.ok) {
+                    alert("Node apagado com sucesso!");
+                    location.reload();
+                } else {
+               alert("Erro ao apagar o Node. Verifique a rota no Backend.");
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+   </script>
+</body>
+</html>

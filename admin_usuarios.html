@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BlackRock Admin - Gestão de Usuários</title>
+    
+    <!-- Fundação CSS Centralizada -->
+    <link rel="stylesheet" href="admin_global.css">
+    
+    <style>
+        /* CSS EXCLUSIVO DE USUÁRIOS */
+        .search-bar { display: flex; gap: 10px; margin-bottom: 25px; }
+        .search-input { flex: 1; background: var(--card); border: 1px solid var(--borda); color: #FFF; padding: 15px 20px; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; }
+        .search-input:focus { border-color: var(--magenta); box-shadow: 0 0 15px rgba(236, 26, 124, 0.2); }
+        .search-btn { background: var(--magenta); color: #FFF; border: none; padding: 0 25px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .search-btn:hover { background: #D0106A; }
+
+        .table-container { background: var(--card); border: 1px solid var(--borda); border-radius: 16px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: #1A202C; color: var(--texto-med); font-size: 11px; text-transform: uppercase; padding: 15px; letter-spacing: 1px; }
+        td { padding: 15px; border-bottom: 1px solid var(--borda); font-size: 13px; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--borda); cursor: pointer; transition: 0.3s; }
+        .user-avatar:hover { border-color: var(--cyan); transform: scale(1.1); box-shadow: 0 0 10px rgba(0,255,255,0.3); }
+        .avatar-placeholder { width: 40px; height: 40px; border-radius: 50%; background: #1A202C; color: var(--texto-med); display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid var(--borda); }
+
+        .status-badge { padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 900; text-transform: uppercase; }
+        .status-ativo { background: rgba(56, 224, 144, 0.1); color: var(--verde); border: 1px solid rgba(56, 224, 144, 0.2); }
+        .status-banido { background: rgba(255, 75, 75, 0.1); color: var(--alerta); border: 1px solid rgba(255, 75, 75, 0.2); }
+
+        .btn-edit { background: #1A202C; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
+        .btn-edit:hover { background: var(--cyan); color: #000; }
+
+        /* Modal para Editar Usuário */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--card); padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; border: 1px solid var(--borda); }
+        .modal-title { font-size: 16px; color: var(--magenta); margin-bottom: 20px; text-transform: uppercase; font-weight: 900; border-bottom: 1px solid var(--borda); padding-bottom: 10px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 11px; color: var(--texto-med); text-transform: uppercase; margin-bottom: 5px; }
+        .form-group input, .form-group select { width: 100%; background: var(--bg); border: 1px solid var(--borda); color: #FFF; padding: 12px; border-radius: 8px; outline: none; }
+        .form-group input:focus { border-color: var(--cyan); }
+        .modal-actions { display: flex; gap: 10px; margin-top: 25px; }
+        .btn-save { flex: 1; background: var(--magenta); color: #FFF; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-cancel { flex: 1; background: transparent; color: var(--texto-med); border: 1px solid var(--borda); padding: 12px; border-radius: 8px; cursor: pointer; }
+
+        /* Modal Visualizador de Foto de Perfil */
+        .photo-viewer { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 4000; justify-content: center; align-items: center; cursor: zoom-out; }
+        .photo-viewer img { max-width: 90%; max-height: 80vh; border-radius: 12px; border: 2px solid var(--cyan); box-shadow: 0 0 30px rgba(0,255,255,0.2); }
+    </style>
+</head>
+<body>
+
+    <header class="header-admin">
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        <div class="header-title">BASE DE USUÁRIOS</div>
+    </header>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <nav class="sidebar" id="sidebar">
+        <!-- O MENU FICA EXATAMENTE IGUAL AOS OUTROS -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
+            <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
+        </div>
+        <a href="admin_dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="admin_financeiro.html" class="nav-link">💰 Financeiro <span class="notif-badge" id="badge-fin">0</span></a>
+        <a href="admin_usuarios.html" class="nav-link active">👥 Usuários</a>
+        <a href="admin_rede.html" class="nav-link">🌳 Rede & Comissões</a>
+        <a href="admin_configs.html" class="nav-link">⚙️ Planos (Nodes)</a>
+        <a href="admin_tarefas.html" class="nav-link">📋 Controle de Tarefas</a>
+        <a href="admin_feed.html" class="nav-link">📢 Feed & Mural</a>
+        <a href="admin_chat.html" class="nav-link">💬 Suporte (SAC) <span class="notif-badge" id="badge-chat">0</span></a>
+        <a href="admin_notificacoes.html" class="nav-link">🔔 Notificações <span class="notif-badge" id="badge-notif">0</span></a>
+        <a href="admin_seguranca.html" class="nav-link" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
+        <a href="admin_requisitos.html" class="nav-link">🛠️ Sistema & Regras</a>
+        <a href="admin_logs.html" class="nav-link">🧾 Logs do Sistema</a>
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+            <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="section-title">Pesquisa Global</div>
+        <div class="search-bar fade-in">
+            <input type="text" id="input-pesquisa" class="search-input" placeholder="Buscar por Nome, Email ou Telefone...">
+            <button class="search-btn" onclick="pesquisarUsuario()">Localizar</button>
+        </div>
+
+        <div class="section-title">Diretório de Clientes</div>
+        <div class="table-container fade-in" style="animation-delay: 0.1s;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Perfil</th>
+                        <th>Identificação</th>
+                        <th>Contato</th>
+                        <th>Saldo (MZN)</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Controles</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-usuarios">
+                    <tr><td colspan="6" style="text-align:center; padding:30px;">Carregando diretório de usuários...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Edição de Usuário -->
+    <div class="modal" id="modal-editar">
+        <div class="modal-content">
+            <div class="modal-title">Inspeção de Conta</div>
+            <input type="hidden" id="edit-id">
+            
+            <div class="form-group">
+                <label>Nome do Cliente</label>
+                <input type="text" id="edit-nome" readonly style="color: var(--texto-med); cursor: not-allowed;">
+            </div>
+            
+            <div class="form-group">
+                <label>Ajuste de Saldo (MZN)</label>
+                <input type="number" id="edit-saldo" step="0.01">
+            </div>
+            
+            <div class="form-group">
+                <label>Status da Conta</label>
+                <select id="edit-status">
+                    <option value="ativo">Ativo (Livre)</option>
+                    <option value="banido">Banido (Bloqueado)</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="fecharModalEdit()">Cancelar</button>
+                <button class="btn-save" onclick="salvarEdicao()">Aplicar Modificações</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Visualizador de Foto de Perfil (Fecha ao clicar fora) -->
+    <div class="photo-viewer" id="photo-viewer" onclick="fecharFoto()">
+        <img id="viewer-img" src="" alt="Ampliação de Perfil">
+    </div>
+
+    <!-- Cérebro JS Centralizado -->
+    <script src="admin_global.js"></script>
+
+    <script>
+        let todosUsuarios = [];
+
+        window.onload = () => {
+            carregarUsuarios();
+        };
+
+        async function carregarUsuarios() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/usuarios`, {
+                    headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
+                });
+                
+                if(res.ok) {
+                    todosUsuarios = await res.json();
+                    renderizarUsuarios(todosUsuarios);
+                }
+            } catch(e) {
+                console.error("Erro ao carregar usuários.", e);
+            }
+        }
+
+        function pesquisarUsuario() {
+            const termo = document.getElementById('input-pesquisa').value.toLowerCase();
+            if(!termo) {
+                renderizarUsuarios(todosUsuarios);
+                return;
+            }
+            
+            const filtrados = todosUsuarios.filter(u => 
+                (u.nome && u.nome.toLowerCase().includes(termo)) || 
+                (u.email && u.email.toLowerCase().includes(termo)) || 
+                (u.telefone && u.telefone.includes(termo))
+            );
+            renderizarUsuarios(filtrados);
+        }
+
+        function renderizarUsuarios(dados) {
+            const tbody = document.getElementById('lista-usuarios');
+            if(dados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color: var(--texto-med);">Nenhum usuário encontrado.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = dados.map(u => {
+                // Lógica Estrita: A foto não redireciona, apenas abre no visualizador
+                let fotoHtml = '';
+                if(u.fotoPerfil && u.fotoPerfil.trim() !== '') {
+                    fotoHtml = `<img src="${u.fotoPerfil}" class="user-avatar" onclick="abrirFoto('${u.fotoPerfil}')" title="Clique para ampliar">`;
+                } else {
+                    const inicial = u.nome ? u.nome.charAt(0).toUpperCase() : '?';
+                    fotoHtml = `<div class="avatar-placeholder">${inicial}</div>`;
+                }
+
+                return `
+                    <tr>
+                        <td>${fotoHtml}</td>
+                        <td>
+                            <div style="font-weight: bold; color: #FFF;">${u.nome || 'Desconhecido'}</div>
+                            <div style="font-size: 10px; color: var(--texto-med);">${u.email || u._id}</div>
+                        </td>
+                        <td style="color: var(--cyan); font-family: monospace;">${u.telefone || 'N/A'}</td>
+                        <td style="font-weight: 900;">${Number(u.saldo || 0).toLocaleString()} MZN</td>
+                        <td><span class="status-badge status-${u.status || 'ativo'}">${u.status || 'ativo'}</span></td>
+                        <td style="text-align: right;">
+                            <button class="btn-edit" onclick="abrirModalEdit('${u._id}')">⚙️ Gerenciar</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        /* --- CONTROLO DA FOTO DE PERFIL --- */
+        function abrirFoto(url) {
+            document.getElementById('viewer-img').src = url;
+            document.getElementById('photo-viewer').style.display = 'flex';
+        }
+
+        function fecharFoto() {
+            document.getElementById('photo-viewer').style.display = 'none';
+            document.getElementById('viewer-img').src = '';
+        }
+
+        /* --- CONTROLO DE EDIÇÃO --- */
+        function abrirModalEdit(id) {
+            const user = todosUsuarios.find(u => u._id === id);
+            if(!user) return;
+
+            document.getElementById('edit-id').value = user._id;
+            document.getElementById('edit-nome').value = user.nome || 'Sem Nome';
+            document.getElementById('edit-saldo').value = user.saldo || 0;
+            document.getElementById('edit-status').value = user.status || 'ativo';
+            
+            document.getElementById('modal-editar').style.display = 'flex';
+        }
+
+        function fecharModalEdit() {
+            document.getElementById('modal-editar').style.display = 'none';
+        }
+
+        async function salvarEdicao() {
+            const id = document.getElementById('edit-id').value;
+            const novoSaldo = document.getElementById('edit-saldo').value;
+            const novoStatus = document.getElementById('edit-status').value;
+
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/usuarios/${id}/atualizar`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${ADMIN_TOKEN}` 
+                    },
+                    body: JSON.stringify({ saldo: novoSaldo, status: novoStatus })
+                });
+
+                if(res.ok) {
+                    fecharModalEdit();
+                    carregarUsuarios(); // Recarrega para ver as mudanças
+                } else {
+                    const err = await res.json();
+                    alert(`Erro: ${err.erro}`);
+                }
+            } catch(e) {
+                alert("Falha ao comunicar com o servidor.");
+            }
+        }
+    </script>
+</body>
+</html>

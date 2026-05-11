@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BlackRock Admin - Segurança & Fraude</title>
+    
+    <!-- 🚀 FUNDAÇÃO CSS GLOBAL -->
+    <link rel="stylesheet" href="admin_global.css">
+    
+    <style>
+        /* CSS EXCLUSIVO DE SEGURANÇA */
+        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .card-shield { background: var(--card); border: 1px solid var(--borda); padding: 20px; border-radius: 16px; position: relative; overflow: hidden; display: flex; align-items: center; gap: 15px; }
+        .shield-icon { font-size: 30px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+        .bg-red { background: rgba(255, 75, 75, 0.1); color: var(--alerta); border: 1px solid var(--alerta); }
+        .bg-green { background: rgba(56, 224, 144, 0.1); color: var(--verde); border: 1px solid var(--verde); }
+        .bg-yellow { background: rgba(246, 224, 94, 0.1); color: var(--pendente); border: 1px solid var(--pendente); }
+        
+        .shield-info h3 { font-size: 10px; color: var(--texto-med); text-transform: uppercase; margin-bottom: 5px; }
+        .shield-info p { font-size: 20px; font-weight: 900; color: #FFF; }
+
+        .ban-control { background: rgba(255, 75, 75, 0.05); border: 1px solid var(--alerta); padding: 20px; border-radius: 16px; margin-bottom: 25px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .ban-input { flex: 1; min-width: 250px; background: #1A202C; border: 1px solid var(--borda); color: #FFF; padding: 12px 15px; border-radius: 10px; outline: none; font-size: 13px; }
+        .ban-input:focus { border-color: var(--alerta); }
+        .btn-ban { background: var(--alerta); color: #FFF; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 900; cursor: pointer; text-transform: uppercase; }
+
+        .table-container { background: var(--card); border: 1px solid var(--borda); border-radius: 16px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: #1A202C; color: var(--texto-med); font-size: 11px; text-transform: uppercase; padding: 15px; letter-spacing: 1px; }
+        td { padding: 15px; border-bottom: 1px solid var(--borda); font-size: 13px; }
+        tr:hover { background: rgba(255,255,255,0.02); }
+
+        .ip-badge { background: #1A202C; color: var(--cyan); padding: 4px 8px; border-radius: 6px; font-family: monospace; font-size: 12px; border: 1px solid var(--borda); }
+        .btn-unban { background: transparent; color: var(--verde); border: 1px solid var(--verde); padding: 6px 12px; border-radius: 6px; font-size: 10px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .btn-unban:hover { background: rgba(56, 224, 144, 0.1); }
+    </style>
+</head>
+<body>
+
+    <header class="header-admin">
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        <div class="header-title" style="color: var(--alerta);">DEFESA E SEGURANÇA</div>
+    </header>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <nav class="sidebar" id="sidebar">
+        <!-- MENU NATIVO INTACTO -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
+            <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
+        </div>
+        <a href="admin_dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="admin_financeiro.html" class="nav-link">💰 Financeiro <span class="notif-badge" id="badge-fin">0</span></a>
+        <a href="admin_usuarios.html" class="nav-link">👥 Usuários</a>
+        <a href="admin_rede.html" class="nav-link">🌳 Rede & Comissões</a>
+        <a href="admin_configs.html" class="nav-link">⚙️ Planos (Nodes)</a>
+        <a href="admin_tarefas.html" class="nav-link">📋 Controle de Tarefas</a>
+        <a href="admin_feed.html" class="nav-link">📢 Feed & Mural</a>
+        <a href="admin_chat.html" class="nav-link">💬 Suporte (SAC) <span class="notif-badge" id="badge-chat">0</span></a>
+        <a href="admin_notificacoes.html" class="nav-link">🔔 Notificações <span class="notif-badge" id="badge-notif">0</span></a>
+        <a href="admin_seguranca.html" class="nav-link active" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
+        <a href="admin_requisitos.html" class="nav-link">🛠️ Sistema & Regras</a>
+        <a href="admin_logs.html" class="nav-link">🧾 Logs do Sistema</a>
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+            <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="grid-stats fade-in">
+            <div class="card-shield">
+                <div class="shield-icon bg-red">🚫</div>
+                <div class="shield-info"><h3>IPs Bloqueados</h3><p id="st-ips">0</p></div>
+            </div>
+            <div class="card-shield">
+                <div class="shield-icon bg-yellow">⚠️</div>
+                <div class="shield-info"><h3>Alertas de Fraude (Hoje)</h3><p id="st-fraudes">0</p></div>
+            </div>
+            <div class="card-shield">
+                <div class="shield-icon bg-green">🛡️</div>
+                <div class="shield-info"><h3>Status do Firewall</h3><p style="color: var(--verde); font-size: 14px;">ATIVO & PROTEGIDO</p></div>
+            </div>
+        </div>
+
+        <div class="section-title">Ação Manual (Blacklist)</div>
+        <div class="ban-control fade-in" style="animation-delay: 0.1s;">
+            <input type="text" id="input-ip" class="ban-input" placeholder="Digite o Endereço IP ou ID do Usuário para bloquear...">
+            <input type="text" id="input-motivo" class="ban-input" placeholder="Motivo do bloqueio (Ex: Múltiplas Contas)...">
+            <button class="btn-ban" onclick="bloquearIP()">EXECUTAR BLOQUEIO</button>
+        </div>
+
+        <div class="section-title">Lista Negra de Sistema</div>
+        <div class="table-container fade-in" style="animation-delay: 0.2s;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Endereço IP</th>
+                        <th>Motivo da Restrição</th>
+                        <th>Data do Bloqueio</th>
+                        <th style="text-align: right;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="lista-negra">
+                    <tr><td colspan="4" style="text-align:center; padding:30px; color:var(--texto-med);">Analisando registos do Firewall...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 🚀 CÉREBRO GLOBAL -->
+    <script src="admin_global.js"></script>
+
+    <script>
+        // JS EXCLUSIVO DA PÁGINA
+        window.onload = () => {
+            carregarListaNegra();
+            carregarStats();
+        };
+
+        async function carregarStats() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/seguranca/stats`, { headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } });
+                const data = await res.json();
+                if(res.ok) {
+                    document.getElementById('st-ips').innerText = data.totalBloqueados || 0;
+                    document.getElementById('st-fraudes').innerText = data.fraudesHoje || 0;
+                }
+            } catch(e) {}
+        }
+
+        async function carregarListaNegra() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/seguranca/blacklist`, { headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } });
+                const ips = await res.json();
+                const tbody = document.getElementById('lista-negra');
+
+                if(ips.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--verde);">Nenhum IP na lista negra. Sistema limpo.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = ips.map(item => `
+                    <tr>
+                        <td><span class="ip-badge">${item.ip}</span></td>
+                        <td style="color: var(--alerta); font-size: 12px;">${item.motivo || 'Violação de Termos'}</td>
+                        <td style="color: var(--texto-med); font-size: 11px;">${new Date(item.dataBloqueio).toLocaleString('pt-PT')}</td>
+                        <td style="text-align: right;"><button class="btn-unban" onclick="desbloquearIP('${item.ip}')">Restaurar Acesso</button></td>
+                    </tr>
+                `).join('');
+            } catch(e) {
+                console.error("Erro ao carregar lista negra.");
+            }
+        }
+
+        async function bloquearIP() {
+            const ip = document.getElementById('input-ip').value;
+            const motivo = document.getElementById('input-motivo').value;
+
+            if(!ip) return alert("Forneça o IP ou ID.");
+
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/seguranca/bloquear`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_TOKEN}` },
+                    body: JSON.stringify({ ip, motivo })
+                });
+
+                if(res.ok) {
+                    document.getElementById('input-ip').value = '';
+                    document.getElementById('input-motivo').value = '';
+                    carregarListaNegra();
+                    carregarStats();
+                } else {
+                    const err = await res.json();
+                    alert(`Erro: ${err.erro}`);
+                }
+            } catch(e) { alert("Falha na conexão com o Firewall."); }
+        }
+
+        async function desbloquearIP(ip) {
+            if(!confirm(`Remover o IP ${ip} da Lista Negra?`)) return;
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/seguranca/desbloquear`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_TOKEN}` },
+                    body: JSON.stringify({ ip })
+                });
+
+                if(res.ok) {
+                    carregarListaNegra();
+                    carregarStats();
+                }
+            } catch(e) { alert("Erro ao remover bloqueio."); }
+        }
+    </script>
+</body>
+</html>

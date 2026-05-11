@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BlackRock Admin - Feed & Mural</title>
+    
+    <!-- 🚀 FUNDAÇÃO CSS GLOBAL -->
+    <link rel="stylesheet" href="admin_global.css">
+    
+    <style>
+        /* CSS EXCLUSIVO DO FEED */
+        .create-post { background: var(--card); border: 1px solid var(--borda); border-radius: 20px; padding: 20px; margin-bottom: 25px; }
+        .post-input { width: 100%; background: #1A202C; border: 1px solid var(--borda); color: #FFF; padding: 15px; border-radius: 15px; outline: none; margin-bottom: 15px; resize: none; font-size: 14px; transition: 0.3s; }
+        .post-input:focus { border-color: var(--cyan); }
+        .post-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-post { padding: 12px; border: none; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
+        .btn-pub { background: var(--magenta); color: #FFF; }
+        .btn-pub:hover { background: #D0106A; }
+        .btn-file { background: #1A202C; color: var(--cyan); border: 1px solid var(--borda); }
+        .btn-file:hover { background: rgba(0, 255, 255, 0.1); }
+
+        .feed-filters { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+        .feed-filters::-webkit-scrollbar { display: none; }
+        .filter-btn { background: var(--card); border: 1px solid var(--borda); color: var(--texto-med); padding: 8px 15px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; cursor: pointer; transition: 0.2s; }
+        .filter-btn.active { background: var(--magenta); color: #FFF; border-color: var(--magenta); }
+
+        .post-card { background: var(--card); border: 1px solid var(--borda); border-radius: 20px; padding: 20px; margin-bottom: 15px; position: relative; transition: 0.3s; }
+        .post-card:hover { border-color: var(--cyan); }
+        .post-card.fixado { border-color: var(--cyan); background: rgba(0, 255, 255, 0.02); }
+        .post-card.auto { border-style: dashed; border-color: var(--texto-med); opacity: 0.9; }
+        
+        .post-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .post-badge { font-size: 9px; font-weight: 900; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .badge-comunicado { background: rgba(236, 26, 124, 0.15); color: var(--magenta); }
+        .badge-prova { background: rgba(56, 224, 144, 0.15); color: var(--verde); }
+        .badge-auto { background: #1A202C; color: var(--texto-med); }
+        
+        .post-content { font-size: 14px; line-height: 1.6; color: #EEE; margin-bottom: 15px; }
+        .post-footer { display: flex; gap: 15px; border-top: 1px solid var(--borda); padding-top: 12px; font-size: 11px; color: var(--texto-med); }
+        .post-stat { display: flex; align-items: center; gap: 5px; }
+
+        .btn-danger { background: none; border: none; color: var(--alerta); font-size: 11px; font-weight: 800; cursor: pointer; }
+        .btn-pin { background: none; border: none; color: var(--cyan); font-size: 11px; font-weight: 800; cursor: pointer; margin-right: 10px; }
+
+        .pinned-tag { font-size: 9px; color: var(--cyan); font-weight: 900; margin-bottom: 5px; display: block; }
+    </style>
+</head>
+<!-- ESTRUTURA DE TELA CHEIA (MODO CINEMA) -->
+    <div id="modal-midia-fullscreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px); flex-direction: column;" onclick="fecharMidiaFullscreen()">
+        <button style="position: absolute; top: 20px; right: 20px; background: rgba(236,26,124,0.2); border: 1px solid var(--magenta); color: var(--magenta); border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; z-index: 10000; display: flex; justify-content: center; align-items: center;">✖</button>
+        <div id="conteudo-fullscreen" style="width: 100%; display: flex; justify-content: center; align-items: center; padding: 20px;"></div>
+    </div>
+<body>
+    <header class="header-admin">
+        <div class="menu-icon" onclick="toggleSidebar()">☰</div>
+        <div class="header-title">FEED & MURAL OFICIAL</div>
+    </header>
+
+    <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+    <nav class="sidebar" id="sidebar">
+        <!-- MENU NATIVO INTACTO -->
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
+            <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
+        </div>
+        <a href="admin_dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="admin_financeiro.html" class="nav-link">💰 Financeiro <span class="notif-badge" id="badge-fin">0</span></a>
+        <a href="admin_usuarios.html" class="nav-link">👥 Usuários</a>
+        <a href="admin_rede.html" class="nav-link">🌳 Rede & Comissões</a>
+        <a href="admin_configs.html" class="nav-link">⚙️ Planos (Nodes)</a>
+        <a href="admin_tarefas.html" class="nav-link">📋 Controle de Tarefas</a>
+        <a href="admin_feed.html" class="nav-link active">📢 Feed & Mural</a>
+        <a href="admin_chat.html" class="nav-link">💬 Suporte (SAC) <span class="notif-badge" id="badge-chat">0</span></a>
+        <a href="admin_notificacoes.html" class="nav-link">🔔 Notificações <span class="notif-badge" id="badge-notif">0</span></a>
+        <a href="admin_seguranca.html" class="nav-link" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
+        <a href="admin_requisitos.html" class="nav-link">🛠️ Sistema & Regras</a>
+        <a href="admin_logs.html" class="nav-link">🧾 Logs do Sistema</a>
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+            <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
+        </div>
+    </nav>
+
+    <div class="main-content" style="max-width: 600px;">
+        <div class="section-title">Nova Publicação</div>
+        <div class="create-post fade-in">
+            <select id="post-tipo" class="post-input" style="height: 50px;">
+                <option value="Comunicado">📢 Comunicado Oficial</option>
+                <option value="Prova de Pagamento">💸 Prova de Pagamento</option>
+                <option value="Atualização">⚙️ Atualização do Sistema</option>
+                <option value="Promoção">🌟 Promoção / Evento</option>
+            </select>
+            <textarea id="post-texto" class="post-input" rows="3" placeholder="O que deseja anunciar hoje?"></textarea>
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 12px; color: var(--texto-med); margin-bottom: 5px; display: block;">Anexar Foto ou Vídeo (Opcional):</label>
+                <input type="file" id="post-midia" accept="image/*,video/*" style="width: 100%; background: #1A202C; border: 1px solid var(--borda); color: #FFF; padding: 10px; border-radius: 10px; outline: none;">
+            </div>
+
+            <div class="post-actions">
+                <button class="btn-post btn-file" onclick="document.getElementById('post-midia').click()">🖼️ Anexar Mídia</button>
+                <button class="btn-post btn-pub" onclick="criarPost()">PUBLICAR</button>
+            </div>
+            <label style="display:flex; align-items:center; gap:8px; margin-top:15px; font-size:11px; color:var(--texto-med);">
+                <input type="checkbox" id="post-fixar"> Fixar este post no topo do mural
+            </label>
+        </div>
+
+        <div class="feed-filters fade-in" id="filtros">
+            <button class="filter-btn active" onclick="filtrar('Todos', this)">Todos</button>
+            <button class="filter-btn" onclick="filtrar('Comunicado', this)">Comunicados</button>
+            <button class="filter-btn" onclick="filtrar('Prova de Pagamento', this)">Pagamentos</button>
+            <button class="filter-btn" onclick="filtrar('Automático', this)">Automáticos</button>
+        </div>
+
+        <div id="mural-container" class="fade-in">
+            <p style="text-align:center; padding:40px; color:var(--texto-med);">Conectando ao banco de dados...</p>
+        </div>
+    </div>
+
+    <!-- 🚀 CÉREBRO GLOBAL -->
+    <script src="admin_global.js"></script>
+
+    <script>
+        let postsOriginais = [];
+
+        // TÉCNICA INFALÍVEL 1: Impede que o global perca a memória
+        document.addEventListener('DOMContentLoaded', () => {
+            // Dá 1 segundo para o admin_global carregar as senhas de Admin em paz
+            setTimeout(carregarMural, 1000);
+        });
+
+        // TÉCNICA INFALÍVEL 2: Funções Blindadas de Resgate
+        function obterUrl() { 
+            return typeof URL_BASE !== 'undefined' ? URL_BASE : 'https://blackrock-gest-o.onrender.com'; 
+        }
+        function obterToken() { 
+            return typeof ADMIN_TOKEN !== 'undefined' ? ADMIN_TOKEN : (localStorage.getItem('admin_token') || localStorage.getItem('br_token')); 
+        }
+
+        async function carregarMural() {
+            const container = document.getElementById('mural-container');
+            
+            try {
+                const token = obterToken();
+                if(!token) throw new Error("Acesso de Administrador não encontrado (Token vazio).");
+
+                const res = await fetch(`${obterUrl()}/api/admin/feed/admin/todos`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if(res.ok) {
+                    postsOriginais = await res.json();
+                    filtrar('Todos', document.querySelector('.filter-btn'));
+                } else {
+                    // 🚀 O RAIO-X: Se o servidor rejeitar, ele vai cuspir o motivo exato aqui!
+                    const dadosErro = await res.json();
+                    container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--alerta); font-size:14px;">
+                        <strong>🛑 O Servidor Rejeitou o Pedido:</strong><br><br>
+                        <span style="color:#FFF;">Motivo: ${dadosErro.erro || 'Erro ' + res.status}</span><br><br>
+                        (Tire um print disto e envie-me para eu analisar!)
+                    </div>`;
+                }
+            } catch(e) { 
+                console.error("Falha ao carregar mural:", e);
+                container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--alerta); font-size:12px; font-weight:bold;">
+                    ❌ Erro de Conexão:<br><br>${e.message}
+                </div>`;
+            }
+        }
+
+        // MOTOR DE FILTRAGEM TRADUTOR
+        function filtrar(tipo, btn) {
+            if(btn) {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            }
+
+            let filtrados = tipo === 'Todos' ? postsOriginais : postsOriginais.filter(p => {
+                if(tipo === 'Automático') return p.isAutomatico === true;
+                if(tipo === 'Comunicado') return p.tipo === 'comunicado';
+                if(tipo === 'Prova de Pagamento') return p.tipo === 'prova_pagamento';
+                return p.tipo === tipo;
+            });
+
+            renderizarPosts(filtrados);
+        }
+
+        // MOTOR RENDERIZADOR (COM VISÃO DE FOTOS)
+        function renderizarPosts(posts) {
+            const container = document.getElementById('mural-container');
+            if(posts.length === 0) return container.innerHTML = '<p style="text-align:center; padding:40px; color:var(--texto-med);">O mural está limpo. Nenhum post encontrado.</p>';
+
+            container.innerHTML = posts.map(p => {
+                const isAuto = p.isAutomatico;
+                const badgeClass = isAuto ? 'badge-auto' : (p.tipo === 'comunicado' ? 'badge-comunicado' : 'badge-prova');
+                const tipoTexto = p.tipo === 'prova_pagamento' ? 'Pagamento' : (p.tipo === 'comunicado' ? 'Comunicado' : p.tipo);
+                
+                const conteudo = p.mensagem || p.texto || '';
+
+                let midiaHTML = '';
+                if (p.formatoMidia === 'imagem' && p.midiaBase64) {
+                    midiaHTML = `<img src="${p.midiaBase64}" style="width:100%; max-height:250px; object-fit:cover; border-radius:10px; margin-bottom:15px; border:1px solid var(--borda);">`;
+                } else if (p.formatoMidia === 'video' && p.midiaBase64) {
+                    midiaHTML = `<video src="${p.midiaBase64}" style="width:100%; border-radius:10px; margin-bottom:15px; border:1px solid var(--borda);" controls></video>`;
+                } else if (p.imagemUrl) {
+                    midiaHTML = `<img src="${p.imagemUrl}" style="width:100%; max-height:250px; object-fit:cover; border-radius:10px; margin-bottom:15px; border:1px solid var(--borda);">`;
+                }
+
+                const totalLikes = p.reacoes || (p.curtidas ? p.curtidas.length : 0);
+
+                return `
+                    <div class="post-card ${p.isFixado ? 'fixado' : ''} ${isAuto ? 'auto' : ''}">
+                        ${p.isFixado ? '<span class="pinned-tag">📌 POST FIXADO NO TOPO</span>' : ''}
+                        <div class="post-header">
+                            <span class="post-badge ${badgeClass}">${isAuto ? 'Auto-Bot' : tipoTexto}</span>
+                            <span style="font-size:10px; color:var(--texto-med);">${new Date(p.createdAt).toLocaleDateString()} às ${new Date(p.createdAt).toLocaleTimeString().slice(0,5)}</span>
+                        </div>
+                        
+                        <div class="post-content">${conteudo.replace(/\n/g, '<br>')}</div>
+                        
+                        ${midiaHTML}
+
+                        <div class="post-footer">
+                            <div class="post-stat" style="color: var(--cyan);">❤️ ${totalLikes} Reconhecimentos</div>
+                            <div style="margin-left:auto; display:flex; gap:15px;">
+                                ${!isAuto ? `<button class="btn-pin" onclick="gerirPost('${p._id}', 'fixar')">📌 Fixar/Desfixar</button>` : ''}
+                                <button class="btn-danger" onclick="gerirPost('${p._id}', 'apagar')">🗑️ Apagar</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // MOTOR DE PUBLICAÇÃO BLINDADO
+        async function criarPost() {
+            const titulo = 'Aviso da Diretoria';
+            const tipo = document.getElementById('post-tipo').value;
+            let texto = document.getElementById('post-texto').value.trim();
+            const isFixado = document.getElementById('post-fixar').checked;
+            const arquivoMidia = document.getElementById('post-midia').files[0];
+
+            if(!texto && !arquivoMidia) return alert("Escreva um texto ou envie uma foto/vídeo.");
+            
+            // Permite publicar só a foto (preenche o texto com um espaço oculto)
+            if(!texto && arquivoMidia) texto = " ";
+
+            let midiaBase64 = null;
+            let formatoMidia = 'nenhum';
+
+            const btnPub = document.querySelector('.btn-pub');
+            btnPub.innerText = "A LANÇAR..."; btnPub.disabled = true;
+
+            if (arquivoMidia) {
+                if (arquivoMidia.size > 40 * 1024 * 1024) {
+                    btnPub.innerText = "PUBLICAR"; btnPub.disabled = false;
+                    return alert("O ficheiro é muito pesado. O máximo é 40MB.");
+                }
+                formatoMidia = arquivoMidia.type.startsWith('video') ? 'video' : 'imagem';
+                
+                midiaBase64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(arquivoMidia);
+                });
+            }
+
+            const payload = { titulo, tipo, texto, isFixado, midiaBase64, formatoMidia };
+
+            try {
+                const res = await fetch(`${obterUrl()}/api/admin/feed/criar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${obterToken()}` },
+                    body: JSON.stringify(payload)
+                });
+                
+                if(res.ok) { 
+                    document.getElementById('post-texto').value = '';
+                    document.getElementById('post-midia').value = ''; 
+                    document.getElementById('post-fixar').checked = false;
+                    alert("Postagem lançada na plataforma com sucesso!");
+                    carregarMural(); 
+                } else {
+                    const data = await res.json();
+                    alert("Erro do servidor: " + (data.erro || "Falha ao gravar na base de dados."));
+                }
+            } catch (e) {
+                alert("Erro grave de conexão com a Internet ou com o Servidor.");
+            } finally {
+                btnPub.innerText = "PUBLICAR"; btnPub.disabled = false;
+            }
+        }
+
+        // MOTOR DE GESTÃO (APAGAR E FIXAR)
+        async function gerirPost(postId, acao) {
+            const mensagem = acao === 'apagar' ? "Tem a certeza que deseja eliminar esta publicação para todos os utilizadores?" : "Deseja alterar o destaque (fixar/desfixar) desta publicação?";
+            if(!confirm(mensagem)) return;
+            
+            try {
+                const res = await fetch(`${obterUrl()}/api/admin/feed/gestao`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${obterToken()}` },
+                    body: JSON.stringify({ postId, acao })
+                });
+                if(res.ok) carregarMural();
+            } catch (e) { console.error("Erro na gestão do post."); }
+        }
+    </script>
+</body>
+</html>
