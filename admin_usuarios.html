@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BlackRock Admin - Gestão de Usuários</title>
     
-    <!-- Fundação CSS Centralizada -->
     <link rel="stylesheet" href="admin_global.css">
     
     <style>
@@ -60,7 +59,6 @@
 
     <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
     <nav class="sidebar" id="sidebar">
-        <!-- O MENU FICA EXATAMENTE IGUAL AOS OUTROS -->
         <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
             <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
@@ -109,7 +107,6 @@
         </div>
     </div>
 
-    <!-- Modal Edição de Usuário -->
     <div class="modal" id="modal-editar">
         <div class="modal-content">
             <div class="modal-title">Inspeção de Conta</div>
@@ -140,15 +137,25 @@
         </div>
     </div>
 
-    <!-- Modal Visualizador de Foto de Perfil (Fecha ao clicar fora) -->
     <div class="photo-viewer" id="photo-viewer" onclick="fecharFoto()">
         <img id="viewer-img" src="" alt="Ampliação de Perfil">
     </div>
 
-    <!-- Cérebro JS Centralizado -->
     <script src="admin_global.js"></script>
 
     <script>
+        // ==========================================
+        // 🛡️ MOTOR DE SEGURANÇA XSS (NOVO)
+        // Evita que os dados do usuário executem scripts maliciosos no painel
+        // ==========================================
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>'"]/g, match => {
+                const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+                return escapeMap[match];
+            });
+        }
+
         let todosUsuarios = [];
 
         window.onload = () => {
@@ -193,12 +200,23 @@
             }
 
             tbody.innerHTML = dados.map(u => {
-                // Lógica Estrita: A foto não redireciona, apenas abre no visualizador
+                // 🛡️ BLINDAGEM DOS DADOS (Evita Injeção XSS)
+                const nomeSeguro = escapeHTML(u.nome || 'Desconhecido');
+                const emailSeguro = escapeHTML(u.email || u._id || '');
+                const telefoneSeguro = escapeHTML(u.telefone || 'N/A');
+                const statusSeguro = escapeHTML(u.status || 'ativo');
+                const idSeguro = escapeHTML(u._id);
+
                 let fotoHtml = '';
                 if(u.fotoPerfil && u.fotoPerfil.trim() !== '') {
-                    fotoHtml = `<img src="${u.fotoPerfil}" class="user-avatar" onclick="abrirFoto('${u.fotoPerfil}')" title="Clique para ampliar">`;
+                    // Impede tentativas de injeção via protocolo javascript: na URL da imagem
+                    let fotoSegura = u.fotoPerfil.trim();
+                    if (fotoSegura.toLowerCase().startsWith('javascript:')) fotoSegura = '';
+                    fotoSegura = escapeHTML(fotoSegura);
+
+                    fotoHtml = `<img src="${fotoSegura}" class="user-avatar" onclick="abrirFoto('${fotoSegura}')" title="Clique para ampliar">`;
                 } else {
-                    const inicial = u.nome ? u.nome.charAt(0).toUpperCase() : '?';
+                    const inicial = u.nome ? escapeHTML(u.nome.charAt(0).toUpperCase()) : '?';
                     fotoHtml = `<div class="avatar-placeholder">${inicial}</div>`;
                 }
 
@@ -206,14 +224,14 @@
                     <tr>
                         <td>${fotoHtml}</td>
                         <td>
-                            <div style="font-weight: bold; color: #FFF;">${u.nome || 'Desconhecido'}</div>
-                            <div style="font-size: 10px; color: var(--texto-med);">${u.email || u._id}</div>
+                            <div style="font-weight: bold; color: #FFF;">${nomeSeguro}</div>
+                            <div style="font-size: 10px; color: var(--texto-med);">${emailSeguro}</div>
                         </td>
-                        <td style="color: var(--cyan); font-family: monospace;">${u.telefone || 'N/A'}</td>
+                        <td style="color: var(--cyan); font-family: monospace;">${telefoneSeguro}</td>
                         <td style="font-weight: 900;">${Number(u.saldo || 0).toLocaleString()} MZN</td>
-                        <td><span class="status-badge status-${u.status || 'ativo'}">${u.status || 'ativo'}</span></td>
+                        <td><span class="status-badge status-${statusSeguro}">${statusSeguro}</span></td>
                         <td style="text-align: right;">
-                            <button class="btn-edit" onclick="abrirModalEdit('${u._id}')">⚙️ Gerenciar</button>
+                            <button class="btn-edit" onclick="abrirModalEdit('${idSeguro}')">⚙️ Gerenciar</button>
                         </td>
                     </tr>
                 `;
@@ -237,6 +255,7 @@
             if(!user) return;
 
             document.getElementById('edit-id').value = user._id;
+            // 🛡️ Preenchimento seguro via .value (Nativo)
             document.getElementById('edit-nome').value = user.nome || 'Sem Nome';
             document.getElementById('edit-saldo').value = user.saldo || 0;
             document.getElementById('edit-status').value = user.status || 'ativo';
