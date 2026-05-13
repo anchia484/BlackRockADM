@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BlackRock Admin - Cockpit Corporativo</title>
     
-    <!-- 🚀 NOVO: Importação da nossa Fundação CSS -->
-<link rel="stylesheet" href="admin_global.css?v=2">
+    <link rel="stylesheet" href="admin_global.css?v=2">
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -34,7 +33,7 @@
         .chart-container { background: var(--card); border: 1px solid var(--borda); border-radius: 20px; padding: 20px; margin-bottom: 30px; height: 300px; width: 100%; }
 
         .log-box { background: var(--card); border: 1px solid var(--borda); border-radius: 20px; overflow: hidden; }
-        .log-filters { display: flex; gap: 10px; padding: 15px 20px; border-bottom: 1px solid var(--borda); background: #1A202C; overflow-x: auto; }
+        .log-filters { display: flex; gap: 10px; padding: 15px 20px; border-bottom: 1px solid var(--borda); background: #1A202C; overflow-x: auto; scrollbar-width: none; }
         .btn-filter { background: var(--bg); border: 1px solid var(--borda); color: var(--texto-med); padding: 8px 15px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; text-transform: uppercase; white-space: nowrap; }
         .btn-filter.active { background: var(--magenta); color: #FFF; border-color: var(--magenta); }
         
@@ -87,7 +86,6 @@
     </nav>
 
     <div class="main-content">
-        <!-- Todo o seu HTML principal mantém-se intacto -->
         <div class="section-title">Visão Global</div>
         <div class="grid-stats fade-in">
             <div class="stat-card">
@@ -153,11 +151,9 @@
 
     </div>
 
-    <!-- 🚀 NOVO: Importação do nosso Cérebro JS -->
-    <script src="admin_global.js"></script>
+    <script src="admin_global.js?v=2"></script>
 
     <script>
-        // O código JS exclusivo desta página fica super limpo e focado no Dashboard:
         let chartInstance = null;
         let todosLogs = [];
 
@@ -168,7 +164,6 @@
 
         async function carregarStats() {
             try {
-                // A URL_BASE e ADMIN_TOKEN vêm magicamente do admin_global.js!
                 const res = await fetch(`${URL_BASE}/api/admin/dashboard`, { 
                     headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } 
                 });
@@ -252,7 +247,7 @@
                 try {
                     const res = await fetch(`${URL_BASE}/api/admin/reset-sistema`, {
                         method: 'POST', headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
-                    });
+                     });
                     const data = await res.json();
                     alert(data.mensagem);
                     carregarStats(); 
