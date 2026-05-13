@@ -56,8 +56,7 @@ function atualizarBadge(id, valor) {
 }
 
 // 4. INICIALIZAÇÃO AUTOMÁTICA
-// Garante que o radar roda a cada 15 segundos em todas as páginas onde este script for importado
-if(ADMIN_TOKEN) {
-    setTimeout(radarGlobalAlertas, 1000); // Roda 1 segundo após abrir a página
-    setInterval(radarGlobalAlertas, 15000); // Fica varrendo o banco de dados a cada 15s
+if (!window.location.pathname.includes('admin_login.html')) {
+    radarGlobalAlertas();
+    setInterval(radarGlobalAlertas, 15000);
 }
