@@ -201,12 +201,10 @@
         const URL_BASE = 'https://blackrock-gest-o.onrender.com';
         const ADMIN_TOKEN = localStorage.getItem('br_admin_token');
 
-        // Proteção de Acesso
         if (!ADMIN_TOKEN && !window.location.pathname.includes('admin_login.html')) {
             window.location.href = 'admin_login.html';
         }
 
-        // Funções de Interface
         function toggleSidebar() { 
             document.getElementById('sidebar').classList.toggle('active'); 
             document.getElementById('overlay').classList.toggle('active'); 
@@ -220,7 +218,6 @@
             }
         }
 
-        // Radar de Alertas
         async function radarGlobalAlertas() {
             if (!ADMIN_TOKEN) return;
             try {
@@ -244,7 +241,6 @@
             }
         }
 
-        // Motor do Dashboard
         let chartInstance = null;
         let todosLogs = [];
 
@@ -340,6 +336,6 @@
                 } catch(e) { alert("Erro ao resetar."); }
             }
         }
-      </script>
+    </script>
 </body>
 </html>
