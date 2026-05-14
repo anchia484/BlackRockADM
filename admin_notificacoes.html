@@ -5,11 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BlackRock Admin - Central de Notificações</title>
     
-    <!-- 🚀 FUNDAÇÃO CSS GLOBAL -->
-    <link rel="stylesheet" href="admin_global.css">
-    
     <style>
-        /* CSS EXCLUSIVO DAS NOTIFICAÇÕES */
+        /* ==========================================
+           1. FUNDAÇÃO & VARIÁVEIS (EMBUTIDO)
+           ========================================== */
+        :root {
+            --bg: #07090D; --card: #0F1219; --magenta: #EC1A7C; --cyan: #00FFFF;
+            --verde: #38E090; --borda: #1A202C; --texto-med: #94A3B8; --alerta: #FF4B4B; --pendente: #F6E05E;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #FFF; min-height: 100vh; padding-top: 70px; overflow-x: hidden; }
+
+        /* ==========================================
+           2. LAYOUT MASTER (SIDEBAR & HEADER)
+           ========================================== */
+        .header-admin { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px; 
+            background: #0F1219; border-bottom: 1px solid var(--borda); 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 20px; z-index: 1000; 
+        }
+        .header-title { font-size: 14px; font-weight: 900; letter-spacing: 1px; color: var(--magenta); text-transform: uppercase; }
+        .menu-icon { font-size: 24px; cursor: pointer; color: var(--texto-med); }
+
+        .sidebar { 
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%; 
+            background: var(--card); border-right: 1px solid var(--borda); 
+            z-index: 2000; transition: 0.3s; padding: 30px 20px; 
+            display: flex; flex-direction: column; overflow-y: auto; 
+        }
+        .sidebar.active { left: 0; }
+        .sidebar-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1500; display: none; 
+        }
+        .sidebar-overlay.active { display: block; }
+
+        .nav-link { 
+            display: flex; align-items: center; gap: 12px; color: var(--texto-med); 
+            text-decoration: none; padding: 15px; border-radius: 12px; 
+            font-weight: 700; font-size: 14px; margin-bottom: 4px; transition: 0.2s; 
+        }
+        .nav-link.active, .nav-link:hover { background: rgba(236, 26, 124, 0.1); color: var(--magenta); }
+        .notif-badge { background: var(--alerta); color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 6px; margin-left: auto; display: none; }
+
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ==========================================
+           3. CSS EXCLUSIVO DAS NOTIFICAÇÕES
+           ========================================== */
+        .main-content { padding: 20px; max-width: 900px; margin: 0 auto; }
+        
         .top-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
         .title-area h2 { font-size: 16px; color: var(--cyan); text-transform: uppercase; letter-spacing: 1px; }
         .title-area p { font-size: 11px; color: var(--texto-med); }
@@ -22,12 +70,12 @@
 
         .filters-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
         .filters-scroll::-webkit-scrollbar { display: none; }
-        .filter-btn { background: var(--card); border: 1px solid var(--borda); color: var(--texto-med); padding: 10px 18px; border-radius: 20px; font-size: 11px; font-weight: 800; white-space: nowrap; cursor: pointer; transition: 0.2s; }
+        .filter-btn { background: var(--card); border: 1px solid var(--borda); color: var(--texto-med); padding: 10px 18px; border-radius: 8px; font-size: 11px; font-weight: 800; white-space: nowrap; cursor: pointer; transition: 0.2s; }
         .filter-btn.active { background: var(--magenta); color: #FFF; border-color: var(--magenta); }
 
         .notif-list { display: flex; flex-direction: column; gap: 12px; }
-        .notif-card { background: var(--card); border: 1px solid var(--borda); border-radius: 16px; padding: 18px; display: flex; gap: 15px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
-        .notif-card:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .notif-card { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; padding: 18px; display: flex; gap: 15px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        .notif-card:hover { transform: translateY(-2px); border-color: #2D3748; }
         
         .notif-card.nao-lida { border-left: 4px solid var(--cyan); background: rgba(0, 255, 255, 0.03); }
         
@@ -50,6 +98,7 @@
     <header class="header-admin">
         <div class="menu-icon" onclick="toggleSidebar()">☰</div>
         <div class="header-title">CENTRAL DE ALERTAS</div>
+        <div style="width: 24px;"></div>
     </header>
 
     <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
@@ -70,12 +119,12 @@
         <a href="admin_seguranca.html" class="nav-link" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
         <a href="admin_requisitos.html" class="nav-link">🛠️ Sistema & Regras</a>
         <a href="admin_logs.html" class="nav-link">🧾 Logs do Sistema</a>
-        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+        <div style="margin-top: auto; padding-top: 20px;">
             <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
         </div>
     </nav>
 
-    <div class="main-content" style="max-width: 900px;">
+    <div class="main-content">
         <div class="top-controls fade-in">
             <div class="title-area">
                 <h2>Radar do Sistema</h2>
@@ -101,16 +150,65 @@
         </div>
     </div>
 
-    <!-- 🚀 CÉREBRO GLOBAL -->
-    <script src="admin_global.js"></script>
-
     <script>
-        // JS EXCLUSIVO DA PÁGINA
+        const URL_BASE = 'https://blackrock-gest-o.onrender.com';
+        const ADMIN_TOKEN = localStorage.getItem('br_admin_token');
+
+        // Proteção
+        if (!ADMIN_TOKEN) window.location.href = 'admin_login.html';
+
+        // Lógica UI
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('active'); 
+            document.getElementById('overlay').classList.toggle('active'); 
+        }
+
+        function logout() { 
+            if(confirm("Encerrar sessão?")) {
+                localStorage.removeItem('br_admin_token'); 
+                localStorage.removeItem('br_admin_info'); 
+                window.location.href = 'admin_login.html'; 
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>'"]/g, match => {
+                const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+                return escapeMap[match];
+            });
+        }
+
+        // Atualização de Badges 
+        function atualizarBadge(id, valor) {
+            const badge = document.getElementById(id);
+            if(badge) {
+                if(valor > 0) { badge.innerText = valor; badge.style.display = 'inline-block'; } 
+                else { badge.style.display = 'none'; }
+            }
+        }
+
+        // Radar Global
+        async function radarGlobalAlertas() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/alertas-globais`, { headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } });
+                if (!res.ok) return;
+                const dados = await res.json();
+                
+                atualizarBadge('badge-fin', dados.financeiro);
+                atualizarBadge('badge-chat', dados.chat);
+                atualizarBadge('badge-notif', dados.notificacoes);
+            } catch(e) {}
+        }
+
+        // JS Específico de Notificações
         let todasNotificacoes = [];
 
         window.onload = () => {
             carregarNotificacoes();
+            radarGlobalAlertas();
             setInterval(carregarNotificacoes, 15000); 
+            setInterval(radarGlobalAlertas, 15000);
         };
 
         async function carregarNotificacoes() {
@@ -121,8 +219,7 @@
                 
                 if(res.ok) {
                     todasNotificacoes = await res.json();
-                    filtrarNotificacoes('Todas', document.querySelector('.filter-btn.active'));
-                    atualizarBadgeLocal();
+                    filtrarNotificacoes('Todas', document.querySelector('.filter-btn.active') || document.querySelector('.filter-btn'));
                 }
             } catch(e) { console.error("Erro ao puxar notificações."); }
         }
@@ -150,18 +247,24 @@
                 else if(n.prioridade === 'media') { prioClass = 'prioridade-media'; icone = '⚠️'; }
 
                 const lidaClass = n.lida ? '' : 'nao-lida';
-                const timeStr = new Date(n.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' - ' + new Date(n.createdAt).toLocaleDateString();
+                const timeStr = new Date(n.createdAt).toLocaleTimeString('pt-PT', {hour: '2-digit', minute:'2-digit'}) + ' - ' + new Date(n.createdAt).toLocaleDateString('pt-PT');
+                
+                // Sanitização Base
+                const tituloSafe = escapeHTML(n.titulo);
+                const descSafe = escapeHTML(n.descricao);
+                const linkSafe = n.link ? escapeHTML(n.link) : '';
+                const tipoSafe = escapeHTML(n.tipo);
 
                 return `
-                    <div class="notif-card ${prioClass} ${lidaClass} fade-in" style="animation-delay: ${i * 0.05}s" onclick="processarClique('${n._id}', '${n.link}', ${n.lida})">
+                    <div class="notif-card ${prioClass} ${lidaClass} fade-in" style="animation-delay: ${Math.min(i * 0.05, 0.5)}s" onclick="processarClique('${n._id}', '${linkSafe}', ${n.lida})">
                         <div class="notif-icon">${icone}</div>
                         <div class="notif-content">
                             <div class="notif-header">
-                                <h4 class="notif-title">${n.titulo}</h4>
+                                <h4 class="notif-title">${tituloSafe}</h4>
                                 <span class="notif-time">${timeStr}</span>
                             </div>
-                            <p class="notif-desc">${n.descricao}</p>
-                            <span class="tag-tipo">${n.tipo}</span>
+                            <p class="notif-desc">${descSafe}</p>
+                            <span class="tag-tipo">${tipoSafe}</span>
                         </div>
                     </div>
                 `;
@@ -178,7 +281,7 @@
                     });
                 } catch(e) {}
             }
-            if(link && link !== 'undefined') window.location.href = link;
+            if(link && link !== 'undefined' && link !== '') window.location.href = link;
         }
 
         async function marcarTodasLidas() {
@@ -188,7 +291,10 @@
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_TOKEN}` },
                     body: JSON.stringify({ todas: true })
                 });
-                if(res.ok) carregarNotificacoes();
+                if(res.ok) {
+                    carregarNotificacoes();
+                    radarGlobalAlertas();
+                }
             } catch(e) {}
         }
 
@@ -199,14 +305,11 @@
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
                 });
-                if(res.ok) carregarNotificacoes();
+                if(res.ok) {
+                    carregarNotificacoes();
+                    radarGlobalAlertas();
+                }
             } catch(e) {}
-        }
-
-        // Atualiza apenas a bolinha local de notificações (o global.js trata do resto)
-        function atualizarBadgeLocal() {
-            const naoLidas = todasNotificacoes.filter(n => !n.lida).length;
-            atualizarBadge('badge-notif', naoLidas); // Usa a função do admin_global.js
         }
     </script>
 </body>

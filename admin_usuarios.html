@@ -5,36 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BlackRock Admin - Gestão de Usuários</title>
     
-    <link rel="stylesheet" href="admin_global.css">
-    
     <style>
-        /* CSS EXCLUSIVO DE USUÁRIOS */
-        .search-bar { display: flex; gap: 10px; margin-bottom: 25px; }
-        .search-input { flex: 1; background: var(--card); border: 1px solid var(--borda); color: #FFF; padding: 15px 20px; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; }
-        .search-input:focus { border-color: var(--magenta); box-shadow: 0 0 15px rgba(236, 26, 124, 0.2); }
-        .search-btn { background: var(--magenta); color: #FFF; border: none; padding: 0 25px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
-        .search-btn:hover { background: #D0106A; }
+        /* ==========================================
+           1. FUNDAÇÃO & VARIÁVEIS (EMBUTIDO)
+           ========================================== */
+        :root {
+            --bg: #07090D; --card: #0F1219; --magenta: #EC1A7C; --cyan: #00FFFF;
+            --verde: #38E090; --borda: #1A202C; --texto-med: #94A3B8; --alerta: #FF4B4B; 
+            --alerta-bg: rgba(255, 75, 75, 0.1); --pendente: #F6E05E;
+        }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #FFF; min-height: 100vh; padding-top: 70px; overflow-x: hidden; }
+
+        /* ==========================================
+           2. LAYOUT MASTER (SIDEBAR & HEADER)
+           ========================================== */
+        .header-admin { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px; 
+            background: #0F1219; border-bottom: 1px solid var(--borda); 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 20px; z-index: 1000; 
+        }
+        .header-title { font-size: 14px; font-weight: 900; letter-spacing: 1px; color: var(--magenta); text-transform: uppercase; }
+        .menu-icon { font-size: 24px; cursor: pointer; color: var(--texto-med); }
+
+        .sidebar { 
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%; 
+            background: var(--card); border-right: 1px solid var(--borda); 
+            z-index: 2000; transition: 0.3s; padding: 30px 20px; 
+            display: flex; flex-direction: column; overflow-y: auto; 
+        }
+        .sidebar.active { left: 0; }
+        .sidebar-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1500; display: none; 
+        }
+        .sidebar-overlay.active { display: block; }
+
+        .nav-link { 
+            display: flex; align-items: center; gap: 12px; color: var(--texto-med); 
+            text-decoration: none; padding: 15px; border-radius: 12px; 
+            font-weight: 700; font-size: 14px; margin-bottom: 4px; transition: 0.2s; 
+        }
+        .nav-link.active, .nav-link:hover { background: rgba(236, 26, 124, 0.1); color: var(--magenta); }
+        .notif-badge { background: var(--alerta); color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 6px; margin-left: auto; display: none; }
+
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .section-title { font-size: 13px; font-weight: 800; color: var(--texto-med); text-transform: uppercase; margin-bottom: 20px; letter-spacing: 1px; }
+
+        /* ==========================================
+           3. CSS ESPECÍFICO DE USUÁRIOS
+           ========================================== */
+        .search-bar { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .search-input { flex: 1; min-width: 200px; background: var(--card); border: 1px solid var(--borda); color: #FFF; padding: 15px 20px; border-radius: 12px; font-size: 14px; outline: none; transition: 0.3s; }
+        .search-input:focus { border-color: var(--cyan); }
+        .search-btn { background: var(--magenta); color: #FFF; border: none; padding: 15px 25px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        
         .table-container { background: var(--card); border: 1px solid var(--borda); border-radius: 16px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
+        table { width: 100%; border-collapse: collapse; text-align: left; min-width: 600px; }
         th { background: #1A202C; color: var(--texto-med); font-size: 11px; text-transform: uppercase; padding: 15px; letter-spacing: 1px; }
         td { padding: 15px; border-bottom: 1px solid var(--borda); font-size: 13px; vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
-        tr:hover { background: rgba(255,255,255,0.02); }
 
-        /* Nova Identidade Institucional em Miniatura para Tabela */
+        /* Identidade Institucional na Tabela */
         .br-institutional-icon { 
-            width: 40px; 
-            height: 40px; 
-            border-radius: 10px; 
+            width: 40px; height: 40px; border-radius: 10px; 
             background: linear-gradient(135deg, rgba(236,26,124,0.1), rgba(78,63,234,0.1)); 
-            color: var(--cyan); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: 900; 
-            font-size: 16px;
-            border: 1px solid rgba(255,255,255,0.08); 
+            color: var(--cyan); display: flex; align-items: center; justify-content: center; 
+            font-weight: 900; font-size: 16px; border: 1px solid rgba(255,255,255,0.08); 
             text-transform: uppercase;
         }
 
@@ -43,16 +85,14 @@
         .status-banido { background: rgba(255, 75, 75, 0.1); color: var(--alerta); border: 1px solid rgba(255, 75, 75, 0.2); }
 
         .btn-edit { background: #1A202C; color: var(--cyan); border: 1px solid var(--cyan); padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
-        .btn-edit:hover { background: var(--cyan); color: #000; }
 
-        /* Modal para Editar Usuário */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 3000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--card); padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; border: 1px solid var(--borda); }
+        /* Modais */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: var(--card); padding: 30px; border-radius: 16px; width: 100%; max-width: 400px; border: 1px solid var(--borda); }
         .modal-title { font-size: 16px; color: var(--magenta); margin-bottom: 20px; text-transform: uppercase; font-weight: 900; border-bottom: 1px solid var(--borda); padding-bottom: 10px; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 11px; color: var(--texto-med); text-transform: uppercase; margin-bottom: 5px; }
         .form-group input, .form-group select { width: 100%; background: var(--bg); border: 1px solid var(--borda); color: #FFF; padding: 12px; border-radius: 8px; outline: none; }
-        .form-group input:focus { border-color: var(--cyan); }
         .modal-actions { display: flex; gap: 10px; margin-top: 25px; }
         .btn-save { flex: 1; background: var(--magenta); color: #FFF; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .btn-cancel { flex: 1; background: transparent; color: var(--texto-med); border: 1px solid var(--borda); padding: 12px; border-radius: 8px; cursor: pointer; }
@@ -63,11 +103,12 @@
     <header class="header-admin">
         <div class="menu-icon" onclick="toggleSidebar()">☰</div>
         <div class="header-title">BASE DE USUÁRIOS</div>
+        <div style="width: 24px;"></div>
     </header>
 
     <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
     <nav class="sidebar" id="sidebar">
-        <div style="text-align: center; margin-bottom: 20px;">
+        <div style="text-align: center; margin-bottom: 25px;">
             <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
             <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
         </div>
@@ -83,7 +124,7 @@
         <a href="admin_seguranca.html" class="nav-link" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
         <a href="admin_requisitos.html" class="nav-link">🛠️ Sistema & Regras</a>
         <a href="admin_logs.html" class="nav-link">🧾 Logs do Sistema</a>
-        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+        <div style="margin-top: auto; padding-top: 20px;">
             <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
         </div>
     </nav>
@@ -91,12 +132,12 @@
     <div class="main-content">
         <div class="section-title">Pesquisa Global</div>
         <div class="search-bar fade-in">
-            <input type="text" id="input-pesquisa" class="search-input" placeholder="Buscar por Nome, Email ou Telefone...">
+            <input type="text" id="input-pesquisa" class="search-input" placeholder="Buscar por Nome, ID ou Telefone...">
             <button class="search-btn" onclick="pesquisarUsuario()">Localizar</button>
         </div>
 
         <div class="section-title">Diretório de Clientes</div>
-        <div class="table-container fade-in" style="animation-delay: 0.1s;">
+        <div class="table-container fade-in">
             <table>
                 <thead>
                     <tr>
@@ -124,12 +165,10 @@
                 <label>Nome do Cliente</label>
                 <input type="text" id="edit-nome" readonly style="color: var(--texto-med); cursor: not-allowed;">
             </div>
-            
             <div class="form-group">
                 <label>Ajuste de Saldo (MZN)</label>
                 <input type="number" id="edit-saldo" step="0.01">
             </div>
-            
             <div class="form-group">
                 <label>Status da Conta</label>
                 <select id="edit-status">
@@ -145,13 +184,46 @@
         </div>
     </div>
 
-    <script src="admin_global.js"></script>
-
     <script>
-        // ==========================================
-        // 🛡️ MOTOR DE SEGURANÇA XSS (NOVO)
-        // Evita que os dados do usuário executem scripts maliciosos no painel
-        // ==========================================
+        const URL_BASE = 'https://blackrock-gest-o.onrender.com';
+        const ADMIN_TOKEN = localStorage.getItem('br_admin_token');
+
+        // Proteção de Acesso
+        if (!ADMIN_TOKEN) window.location.href = 'admin_login.html';
+
+        // Lógica de UI (Sidebar e Logout)
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('active'); 
+            document.getElementById('overlay').classList.toggle('active'); 
+        }
+
+        function logout() { 
+            if(confirm("Encerrar sessão na Diretoria?")) {
+                localStorage.removeItem('br_admin_token'); 
+                localStorage.removeItem('br_admin_info'); 
+                window.location.href = 'admin_login.html'; 
+            }
+        }
+
+        // Radar Global
+        async function radarGlobalAlertas() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/alertas-globais`, { headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } });
+                if (!res.ok) return;
+                const dados = await res.json();
+                
+                ['fin', 'chat', 'notif'].forEach(tipo => {
+                    const badge = document.getElementById(`badge-${tipo}`);
+                    const valor = dados[tipo === 'fin' ? 'financeiro' : tipo === 'notif' ? 'notificacoes' : 'chat'];
+                    if (badge) {
+                        if(valor > 0) { badge.innerText = valor; badge.style.display = 'inline-block'; } 
+                        else { badge.style.display = 'none'; }
+                    }
+                });
+            } catch(e) {}
+        }
+
+        // Segurança XSS
         function escapeHTML(str) {
             if (!str) return '';
             return String(str).replace(/[&<>'"]/g, match => {
@@ -160,37 +232,32 @@
             });
         }
 
+        // Lógica Específica: Gestão de Usuários
         let todosUsuarios = [];
 
         window.onload = () => {
             carregarUsuarios();
+            radarGlobalAlertas();
+            setInterval(radarGlobalAlertas, 15000);
         };
 
         async function carregarUsuarios() {
             try {
-                const res = await fetch(`${URL_BASE}/api/admin/usuarios`, {
-                    headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
-                });
-                
+                const res = await fetch(`${URL_BASE}/api/admin/usuarios`, { headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } });
                 if(res.ok) {
                     todosUsuarios = await res.json();
                     renderizarUsuarios(todosUsuarios);
                 }
-            } catch(e) {
-                console.error("Erro ao carregar usuários.", e);
-            }
+            } catch(e) { console.error("Erro ao carregar usuários.", e); }
         }
 
         function pesquisarUsuario() {
             const termo = document.getElementById('input-pesquisa').value.toLowerCase();
-            if(!termo) {
-                renderizarUsuarios(todosUsuarios);
-                return;
-            }
+            if(!termo) return renderizarUsuarios(todosUsuarios);
             
             const filtrados = todosUsuarios.filter(u => 
                 (u.nome && u.nome.toLowerCase().includes(termo)) || 
-                (u.email && u.email.toLowerCase().includes(termo)) || 
+                (u.idUnico && String(u.idUnico).includes(termo)) || 
                 (u.telefone && u.telefone.includes(termo))
             );
             renderizarUsuarios(filtrados);
@@ -204,15 +271,12 @@
             }
 
             tbody.innerHTML = dados.map(u => {
-                // 🛡️ BLINDAGEM DOS DADOS (Evita Injeção XSS)
                 const nomeSeguro = escapeHTML(u.nome || 'Desconhecido');
-                const emailSeguro = escapeHTML(u.email || u._id || '');
                 const telefoneSeguro = escapeHTML(u.telefone || 'N/A');
+                const idSeguro = escapeHTML(u.idUnico || u._id);
                 const statusSeguro = escapeHTML(u.status || 'ativo');
-                const idSeguro = escapeHTML(u._id);
-
-                // Nova Lógica: Sempre gera a inicial institucional fixa
-                const inicial = u.nome ? escapeHTML(u.nome.charAt(0).toUpperCase()) : '?';
+                
+                const inicial = u.nome ? escapeHTML(u.nome.charAt(0).toUpperCase()) : 'U';
                 const fotoHtml = `<div class="br-institutional-icon">${inicial}</div>`;
 
                 return `
@@ -220,36 +284,30 @@
                         <td>${fotoHtml}</td>
                         <td>
                             <div style="font-weight: bold; color: #FFF;">${nomeSeguro}</div>
-                            <div style="font-size: 10px; color: var(--texto-med);">${emailSeguro}</div>
+                            <div style="font-size: 10px; color: var(--texto-med);">ID: ${idSeguro}</div>
                         </td>
                         <td style="color: var(--cyan); font-family: monospace;">${telefoneSeguro}</td>
                         <td style="font-weight: 900;">${Number(u.saldo || 0).toLocaleString()} MZN</td>
                         <td><span class="status-badge status-${statusSeguro}">${statusSeguro}</span></td>
                         <td style="text-align: right;">
-                            <button class="btn-edit" onclick="abrirModalEdit('${idSeguro}')">⚙️ Gerenciar</button>
+                            <button class="btn-edit" onclick="abrirModalEdit('${u._id}')">⚙️ Gerenciar</button>
                         </td>
                     </tr>
                 `;
             }).join('');
         }
 
-        /* --- CONTROLO DE EDIÇÃO --- */
         function abrirModalEdit(id) {
             const user = todosUsuarios.find(u => u._id === id);
             if(!user) return;
-
             document.getElementById('edit-id').value = user._id;
-            // 🛡️ Preenchimento seguro via .value (Nativo)
             document.getElementById('edit-nome').value = user.nome || 'Sem Nome';
             document.getElementById('edit-saldo').value = user.saldo || 0;
             document.getElementById('edit-status').value = user.status || 'ativo';
-            
             document.getElementById('modal-editar').style.display = 'flex';
         }
 
-        function fecharModalEdit() {
-            document.getElementById('modal-editar').style.display = 'none';
-        }
+        function fecharModalEdit() { document.getElementById('modal-editar').style.display = 'none'; }
 
         async function salvarEdicao() {
             const id = document.getElementById('edit-id').value;
@@ -259,23 +317,18 @@
             try {
                 const res = await fetch(`${URL_BASE}/api/admin/usuarios/${id}/atualizar`, {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${ADMIN_TOKEN}` 
-                    },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_TOKEN}` },
                     body: JSON.stringify({ saldo: novoSaldo, status: novoStatus })
                 });
 
                 if(res.ok) {
                     fecharModalEdit();
-                    carregarUsuarios(); // Recarrega para ver as mudanças
+                    carregarUsuarios(); 
                 } else {
                     const err = await res.json();
                     alert(`Erro: ${err.erro}`);
                 }
-            } catch(e) {
-                alert("Falha ao comunicar com o servidor.");
-            }
+            } catch(e) { alert("Falha ao comunicar com o servidor."); }
         }
     </script>
 </body>

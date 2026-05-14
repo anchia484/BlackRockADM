@@ -5,22 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BlackRock Admin - Logs do Sistema</title>
     
-    <link rel="stylesheet" href="admin_global.css">
-    
     <style>
-        /* CSS EXCLUSIVO DOS LOGS E AUDITORIA */
+        /* ==========================================
+           1. FUNDAÇÃO & VARIÁVEIS (EMBUTIDO)
+           ========================================== */
+        :root {
+            --bg: #07090D; --card: #0F1219; --magenta: #EC1A7C; --cyan: #00FFFF;
+            --verde: #38E090; --borda: #1A202C; --texto-med: #94A3B8; --alerta: #FF4B4B; 
+            --alerta-bg: rgba(255, 75, 75, 0.1); --pendente: #F6E05E; --aviso: #F6E05E;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #FFF; min-height: 100vh; padding-top: 70px; overflow-x: hidden; }
+
+        /* ==========================================
+           2. LAYOUT MASTER (SIDEBAR & HEADER)
+           ========================================== */
+        .header-admin { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px; 
+            background: #0F1219; border-bottom: 1px solid var(--borda); 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 20px; z-index: 1000; 
+        }
+        .header-title { font-size: 14px; font-weight: 900; letter-spacing: 1px; color: var(--magenta); text-transform: uppercase; }
+        .menu-icon { font-size: 24px; cursor: pointer; color: var(--texto-med); }
+
+        .sidebar { 
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%; 
+            background: var(--card); border-right: 1px solid var(--borda); 
+            z-index: 2000; transition: 0.3s; padding: 30px 20px; 
+            display: flex; flex-direction: column; overflow-y: auto; 
+        }
+        .sidebar.active { left: 0; }
+        .sidebar-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1500; display: none; 
+        }
+        .sidebar-overlay.active { display: block; }
+
+        .nav-link { 
+            display: flex; align-items: center; gap: 12px; color: var(--texto-med); 
+            text-decoration: none; padding: 15px; border-radius: 12px; 
+            font-weight: 700; font-size: 14px; margin-bottom: 4px; transition: 0.2s; 
+        }
+        .nav-link.active, .nav-link:hover { background: rgba(236, 26, 124, 0.1); color: var(--magenta); }
+        .notif-badge { background: var(--alerta); color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 6px; margin-left: auto; display: none; }
+
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ==========================================
+           3. CSS EXCLUSIVO DOS LOGS E AUDITORIA
+           ========================================== */
+        .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-card { background: var(--card); border: 1px solid var(--borda); padding: 20px; border-radius: 16px; position: relative; overflow: hidden; }
+        .stat-card { background: var(--card); border: 1px solid var(--borda); padding: 20px; border-radius: 12px; position: relative; overflow: hidden; }
         .stat-card span { font-size: 10px; color: var(--texto-med); text-transform: uppercase; display: block; margin-bottom: 8px; font-weight: 800; }
         .stat-card strong { font-size: 24px; font-weight: 900; }
         
-        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; background: var(--card); padding: 15px; border-radius: 16px; border: 1px solid var(--borda); margin-bottom: 20px; align-items: center; justify-content: space-between; }
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid var(--borda); margin-bottom: 20px; align-items: center; justify-content: space-between; }
         .filters { display: flex; flex-wrap: wrap; gap: 10px; flex: 1; }
         .input-dark { background: #1A202C; border: 1px solid var(--borda); color: #FFF; padding: 10px 15px; border-radius: 8px; outline: none; font-size: 12px; }
         .btn-export { background: rgba(56, 224, 144, 0.15); color: var(--verde); border: 1px solid var(--verde); padding: 10px 15px; border-radius: 8px; font-size: 11px; font-weight: 900; cursor: pointer; text-transform: uppercase; transition: 0.2s; }
         .btn-export:hover { background: var(--verde); color: #000; }
 
-        .table-container { background: var(--card); border: 1px solid var(--borda); border-radius: 16px; overflow-x: auto; }
+        .table-container { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
         th { background: #1A202C; color: var(--texto-med); padding: 15px; text-transform: uppercase; font-weight: 900; font-size: 10px; letter-spacing: 1px; }
         td { padding: 15px; border-bottom: 1px solid #14171F; }
@@ -37,19 +86,20 @@
         .s-sucesso { color: var(--verde); }
         .s-falha { color: var(--alerta); }
 
-        /* Modal Detalhes do Evento */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
-        .modal-content { background: var(--card); border: 1px solid var(--borda); width: 100%; max-width: 600px; border-radius: 20px; padding: 25px; }
+        /* Modal Detalhes do Evento (Design Plano) */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #05070A; z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-content { background: var(--card); border: 1px solid var(--borda); width: 100%; max-width: 600px; border-radius: 16px; padding: 25px; }
         .modal-title { font-size: 16px; color: var(--cyan); margin-bottom: 20px; text-transform: uppercase; font-weight: bold; }
-        .modal-body { background: #1A202C; padding: 15px; border-radius: 12px; font-family: monospace; font-size: 12px; color: #A0AEC0; white-space: pre-wrap; word-wrap: break-word; border-left: 3px solid var(--magenta); margin-bottom: 20px; max-height: 50vh; overflow-y: auto; }
-        .btn-close { width: 100%; padding: 12px; background: var(--texto-med); color: #000; font-weight: 900; border: none; border-radius: 10px; cursor: pointer; transition: 0.2s; }
-        .btn-close:hover { background: #FFF; }
+        .modal-body { background: #1A202C; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; color: #A0AEC0; white-space: pre-wrap; word-wrap: break-word; border-left: 3px solid var(--magenta); margin-bottom: 20px; max-height: 50vh; overflow-y: auto; }
+        .btn-close { width: 100%; padding: 14px; background: #1A202C; color: #FFF; font-weight: 900; border: 1px solid var(--borda); border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .btn-close:hover { background: #2D3748; }
     </style>
 </head>
 <body>
     <header class="header-admin">
         <div class="menu-icon" onclick="toggleSidebar()">☰</div>
         <div class="header-title">AUDITORIA E LOGS GERAIS</div>
+        <div style="width: 24px;"></div>
     </header>
 
     <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
@@ -70,7 +120,7 @@
         <a href="admin_seguranca.html" class="nav-link" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
         <a href="admin_requisitos.html" class="nav-link">🛠️ Sistema & Regras</a>
         <a href="admin_logs.html" class="nav-link active">🧾 Logs do Sistema</a>
-        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+        <div style="margin-top: auto; padding-top: 20px;">
             <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
         </div>
     </nav>
@@ -146,16 +196,53 @@
         </div>
     </div>
 
-    <script src="admin_global.js"></script>
-
     <script>
-        // JS EXCLUSIVO DA PÁGINA
+        const URL_BASE = 'https://blackrock-gest-o.onrender.com';
+        const ADMIN_TOKEN = localStorage.getItem('br_admin_token');
+
+        // Proteção de Acesso
+        if (!ADMIN_TOKEN) window.location.href = 'admin_login.html';
+
+        // Lógica de Interface
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('active'); 
+            document.getElementById('overlay').classList.toggle('active'); 
+        }
+
+        function logout() { 
+            if(confirm("Encerrar sessão na Diretoria?")) {
+                localStorage.removeItem('br_admin_token'); 
+                localStorage.removeItem('br_admin_info'); 
+                window.location.href = 'admin_login.html'; 
+            }
+        }
+
+        // Radar Global Embutido
+        async function radarGlobalAlertas() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/alertas-globais`, { headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } });
+                if (!res.ok) return;
+                const dados = await res.json();
+                ['fin', 'chat', 'notif'].forEach(tipo => {
+                    const badge = document.getElementById(`badge-${tipo}`);
+                    const valor = dados[tipo === 'fin' ? 'financeiro' : tipo === 'notif' ? 'notificacoes' : 'chat'];
+                    if (badge) {
+                        if(valor > 0) { badge.innerText = valor; badge.style.display = 'inline-block'; } 
+                        else { badge.style.display = 'none'; }
+                    }
+                });
+            } catch(e) {}
+        }
+
+        // JS Exclusivo da Página (Logs & Auditoria)
         let logsOriginais = [];
 
         window.onload = () => {
             carregarEstatisticas();
             carregarLogs();
+            radarGlobalAlertas();
             setInterval(carregarLogs, 20000); 
+            setInterval(radarGlobalAlertas, 15000);
         };
 
         async function carregarEstatisticas() {
@@ -198,6 +285,15 @@
             return 't-user';
         }
 
+        // Blindagem contra XSS nos dados que chegam
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>'"]/g, match => {
+                const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+                return escapeMap[match];
+            });
+        }
+
         function aplicarFiltros() {
             const busca = document.getElementById('filtro-busca').value.toLowerCase();
             const tipo = document.getElementById('filtro-tipo').value;
@@ -226,15 +322,19 @@
                 const statClass = l.status === 'sucesso' ? 's-sucesso' : 's-falha';
                 const statusSymbol = l.status === 'sucesso' ? '✔' : '❌';
                 
+                // Sanitiza os campos a renderizar na tabela principal
+                const acaoSafe = escapeHTML(l.acao);
+                const userSafe = escapeHTML(l.usuario || l.ip || 'Sistema');
+                
                 const jsonStr = encodeURIComponent(JSON.stringify(l, null, 2));
 
                 return `
                     <tr onclick="abrirDetalhes('${jsonStr}')">
                         <td style="color: var(--texto-med); font-family: monospace;">${dataFormatada}</td>
-                        <td><span class="tag ${tagClass}">${l.tipo}</span></td>
-                        <td style="color: #FFF; font-weight: 600;">${l.acao}</td>
-                        <td style="color: var(--cyan); font-family: monospace;">${l.usuario || l.ip || 'Sistema'}</td>
-                        <td class="${statClass}"><span style="font-weight:900;">${statusSymbol}</span> ${l.status.toUpperCase()}</td>
+                        <td><span class="tag ${tagClass}">${escapeHTML(l.tipo)}</span></td>
+                        <td style="color: #FFF; font-weight: 600;">${acaoSafe}</td>
+                        <td style="color: var(--cyan); font-family: monospace;">${userSafe}</td>
+                        <td class="${statClass}"><span style="font-weight:900;">${statusSymbol}</span> ${escapeHTML(l.status.toUpperCase())}</td>
                     </tr>
                 `;
             }).join('');
@@ -251,6 +351,7 @@ STATUS REAL:  ${data.status.toUpperCase()}
 [ DADOS PROCESSADOS ]
 ${data.detalhes ? JSON.stringify(data.detalhes, null, 2) : 'Nenhum dado adicional capturado.'}
             `;
+            // innerText já protege contra injeção de HTML no textarea/pre
             document.getElementById('modal-conteudo').innerText = formatado.trim();
             document.getElementById('modalDetalhes').style.display = 'flex';
         }
@@ -263,18 +364,10 @@ ${data.detalhes ? JSON.stringify(data.detalhes, null, 2) : 'Nenhum dado adiciona
             if(logsOriginais.length === 0) return alert("Sem dados para exportar.");
             let csv = "Data,Tipo,Acao,Usuario,IP,Status\n";
             logsOriginais.forEach(l => {
-                csv += `"${new Date(l.createdAt).toLocaleString()}","${l.tipo}","${l.acao}","${l.usuario || ''}","${l.ip || ''}","${l.status}"\n`;
+                // Escape basico para CSV
+                const usuario = (l.usuario || '').replace(/"/g, '""');
+                const acao = (l.acao || '').replace(/"/g, '""');
+                csv += `"${new Date(l.createdAt).toLocaleString()}","${l.tipo}","${acao}","${usuario}","${l.ip || ''}","${l.status}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('hidden', '');
-            a.setAttribute('href', url);
-            a.setAttribute('download', 'blackrock_auditoria_' + Date.now() + '.csv');
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-    </script>
-</body>
-</html>
+ 

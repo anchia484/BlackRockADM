@@ -5,19 +5,67 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BlackRock Admin - Controle de Tarefas</title>
     
-    <!-- 🚀 FUNDAÇÃO CSS GLOBAL -->
-    <link rel="stylesheet" href="admin_global.css">
-    
     <style>
-        /* CSS EXCLUSIVO DE TAREFAS */
-        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
-        .card-stat { background: var(--card); border: 1px solid var(--borda); padding: 20px; border-radius: 18px; text-align: center; }
-        .card-stat span { font-size: 10px; color: var(--texto-med); text-transform: uppercase; display: block; margin-bottom: 8px; }
-        .card-stat strong { font-size: 18px; color: var(--cyan); }
+        /* ==========================================
+           1. FUNDAÇÃO & VARIÁVEIS (EMBUTIDO)
+           ========================================== */
+        :root {
+            --bg: #07090D; --card: #0F1219; --magenta: #EC1A7C; --cyan: #00FFFF;
+            --verde: #38E090; --borda: #1A202C; --texto-med: #94A3B8; --alerta: #FF4B4B; --pendente: #F6E05E;
+        }
 
-        .table-container { background: var(--card); border: 1px solid var(--borda); border-radius: 20px; overflow: hidden; margin-top: 20px; }
-        .table-header { padding: 15px 20px; border-bottom: 1px solid var(--borda); display: flex; justify-content: space-between; align-items: center; }
-        .exec-item { padding: 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #FFF; min-height: 100vh; padding-top: 70px; overflow-x: hidden; }
+
+        /* ==========================================
+           2. LAYOUT MASTER (SIDEBAR & HEADER)
+           ========================================== */
+        .header-admin { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px; 
+            background: #0F1219; border-bottom: 1px solid var(--borda); 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 20px; z-index: 1000; 
+        }
+        .header-title { font-size: 14px; font-weight: 900; letter-spacing: 1px; color: var(--magenta); text-transform: uppercase; }
+        .menu-icon { font-size: 24px; cursor: pointer; color: var(--texto-med); }
+
+        .sidebar { 
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%; 
+            background: var(--card); border-right: 1px solid var(--borda); 
+            z-index: 2000; transition: 0.3s; padding: 30px 20px; 
+            display: flex; flex-direction: column; overflow-y: auto; 
+        }
+        .sidebar.active { left: 0; }
+        .sidebar-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1500; display: none; 
+        }
+        .sidebar-overlay.active { display: block; }
+
+        .nav-link { 
+            display: flex; align-items: center; gap: 12px; color: var(--texto-med); 
+            text-decoration: none; padding: 15px; border-radius: 12px; 
+            font-weight: 700; font-size: 14px; margin-bottom: 4px; transition: 0.2s; 
+        }
+        .nav-link.active, .nav-link:hover { background: rgba(236, 26, 124, 0.1); color: var(--magenta); }
+        .notif-badge { background: var(--alerta); color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 6px; margin-left: auto; display: none; }
+
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ==========================================
+           3. CSS EXCLUSIVO DE TAREFAS
+           ========================================== */
+        .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        
+        .grid-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+        .card-stat { background: var(--card); border: 1px solid var(--borda); padding: 20px; border-radius: 12px; text-align: center; }
+        .card-stat span { font-size: 10px; color: var(--texto-med); text-transform: uppercase; display: block; margin-bottom: 8px; font-weight: 800; }
+        .card-stat strong { font-size: 18px; color: var(--cyan); font-weight: 900; }
+
+        .table-container { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; margin-top: 20px; }
+        .table-header { padding: 15px 20px; border-bottom: 1px solid var(--borda); display: flex; justify-content: space-between; align-items: center; background: #1A202C; }
+        .exec-item { padding: 15px 20px; border-bottom: 1px solid var(--borda); display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
         .exec-item:hover { background: rgba(255,255,255,0.02); }
         .exec-item:last-child { border-bottom: none; }
         .exec-info h4 { font-size: 13px; color: #FFF; margin-bottom: 3px;}
@@ -32,11 +80,11 @@
     <header class="header-admin">
         <div class="menu-icon" onclick="toggleSidebar()">☰</div>
         <div class="header-title">CENTRAL DE TAREFAS</div>
+        <div style="width: 24px;"></div>
     </header>
 
     <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
     <nav class="sidebar" id="sidebar">
-        <!-- MENU NATIVO INTACTO -->
         <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
             <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
@@ -78,9 +126,9 @@
             </div>
         </div>
 
-        <div class="table-container fade-in" style="animation-delay: 0.1s;">
+        <div class="table-container fade-in">
             <div class="table-header">
-                <h3 style="font-size: 14px; text-transform: uppercase; color: var(--cyan);">Últimas Execuções</h3>
+                <h3 style="font-size: 14px; text-transform: uppercase; color: var(--cyan); margin: 0; font-weight: 800;">Últimas Execuções</h3>
                 <span style="font-size: 10px; color: var(--verde); font-weight: bold; display: flex; align-items: center; gap: 5px;">
                     <span class="live-dot"></span> LIVE
                 </span>
@@ -91,14 +139,59 @@
         </div>
     </div>
 
-    <!-- 🚀 CÉREBRO GLOBAL -->
-    <script src="admin_global.js"></script>
-
     <script>
-        // JS EXCLUSIVO DA PÁGINA (Apenas buscar estatísticas e histórico)
+        const URL_BASE = 'https://blackrock-gest-o.onrender.com';
+        const ADMIN_TOKEN = localStorage.getItem('br_admin_token');
+
+        // Proteção de Acesso
+        if (!ADMIN_TOKEN) window.location.href = 'admin_login.html';
+
+        // Lógica de UI
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('active'); 
+            document.getElementById('overlay').classList.toggle('active'); 
+        }
+
+        function logout() { 
+            if(confirm("Encerrar sessão na Diretoria?")) {
+                localStorage.removeItem('br_admin_token'); 
+                localStorage.removeItem('br_admin_info'); 
+                window.location.href = 'admin_login.html'; 
+            }
+        }
+
+        // Prevenção XSS
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>'"]/g, match => {
+                const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+                return escapeMap[match];
+            });
+        }
+
+        // Radar Global Embutido
+        async function radarGlobalAlertas() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/alertas-globais`, { headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } });
+                if (!res.ok) return;
+                const dados = await res.json();
+                ['fin', 'chat', 'notif'].forEach(tipo => {
+                    const badge = document.getElementById(`badge-${tipo}`);
+                    const valor = dados[tipo === 'fin' ? 'financeiro' : tipo === 'notif' ? 'notificacoes' : 'chat'];
+                    if (badge) {
+                        if(valor > 0) { badge.innerText = valor; badge.style.display = 'inline-block'; } 
+                        else { badge.style.display = 'none'; }
+                    }
+                });
+            } catch(e) {}
+        }
+
+        // Lógica Exclusiva da Página (Tarefas)
         window.onload = () => {
             carregarDashboardTarefas();
+            radarGlobalAlertas();
             setInterval(carregarDashboardTarefas, 15000); // Atualiza dados ao vivo a cada 15s
+            setInterval(radarGlobalAlertas, 15000);
         };
 
         async function carregarDashboardTarefas() {
@@ -108,12 +201,12 @@
                 });
                 if(res.ok) {
                     const data = await res.json();
-                    document.getElementById('stat-exec').innerText = data.execucoesHoje;
-                    document.getElementById('stat-pago').innerText = Number(data.totalPago).toLocaleString() + " MZN";
-                    document.getElementById('stat-media').innerText = data.mediaGanhos + " MZN";
-                    document.getElementById('stat-ativos').innerText = data.usuariosAtivos;
+                    document.getElementById('stat-exec').innerText = data.execucoesHoje || 0;
+                    document.getElementById('stat-pago').innerText = Number(data.totalPago || 0).toLocaleString('pt-MZ') + " MZN";
+                    document.getElementById('stat-media').innerText = Number(data.mediaGanhos || 0).toLocaleString('pt-MZ') + " MZN";
+                    document.getElementById('stat-ativos').innerText = data.usuariosAtivos || 0;
 
-                    carregarHistorico(); // Carrega a lista logo após pegar os status
+                    carregarHistorico(); 
                 }
             } catch(e) { console.error("Erro ao carregar métricas do terminal."); }
         }
@@ -127,15 +220,20 @@
                     const tarefas = await res.json();
                     const container = document.getElementById('lista-execucoes');
                     
+                    if (!tarefas || tarefas.length === 0) {
+                        container.innerHTML = '<p style="text-align:center; padding:30px; color:var(--texto-med);">O terminal está silencioso. Nenhuma tarefa registada recentemente.</p>';
+                        return;
+                    }
+
                     container.innerHTML = tarefas.map(t => `
                         <div class="exec-item">
                             <div class="exec-info">
-                                <h4>${t.usuarioNome}</h4>
-                                <p>${t.planoNome} • ${new Date(t.data).toLocaleTimeString('pt-PT')}</p>
+                                <h4>${escapeHTML(t.usuarioNome || 'Sistema')}</h4>
+                                <p>${escapeHTML(t.planoNome || 'Plano Desconhecido')} • ${new Date(t.data).toLocaleTimeString('pt-PT')}</p>
                             </div>
-                            <div class="exec-val">+ ${t.valor.toFixed(2)} MZN</div>
+                            <div class="exec-val">+ ${Number(t.valor).toLocaleString('pt-MZ')} MZN</div>
                         </div>
-                    `).join('') || '<p style="text-align:center; padding:30px; color:var(--texto-med);">O terminal está silencioso. Nenhuma tarefa registada hoje.</p>';
+                    `).join('');
                 }
             } catch(e) { console.error("Erro ao carregar feed de execuções."); }
         }

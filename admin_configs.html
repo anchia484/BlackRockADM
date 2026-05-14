@@ -5,44 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BlackRock Admin - Gestão de Nodes Inteligentes</title>
     
-    <!-- 🚀 FUNDAÇÃO CSS GLOBAL -->
-<link rel="stylesheet" href="admin_global.css?v=2">
-
     <style>
-        /* CSS EXCLUSIVO DOS NODES E PLANOS */
+        /* ==========================================
+           1. FUNDAÇÃO & VARIÁVEIS (EMBUTIDO)
+           ========================================== */
+        :root {
+            --bg: #07090D; --card: #0F1219; --magenta: #EC1A7C; --cyan: #00FFFF;
+            --verde: #38E090; --borda: #1A202C; --texto-med: #94A3B8; --alerta: #FF4B4B; --pendente: #F6E05E;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #FFF; min-height: 100vh; padding-top: 70px; overflow-x: hidden; }
+
+        /* ==========================================
+           2. LAYOUT MASTER (SIDEBAR & HEADER)
+           ========================================== */
+        .header-admin { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 70px; 
+            background: #0F1219; border-bottom: 1px solid var(--borda); 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 20px; z-index: 1000; 
+        }
+        .header-title { font-size: 14px; font-weight: 900; letter-spacing: 1px; color: var(--magenta); text-transform: uppercase; }
+        .menu-icon { font-size: 24px; cursor: pointer; color: var(--texto-med); }
+
+        .sidebar { 
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%; 
+            background: var(--card); border-right: 1px solid var(--borda); 
+            z-index: 2000; transition: 0.3s; padding: 30px 20px; 
+            display: flex; flex-direction: column; overflow-y: auto; 
+        }
+        .sidebar.active { left: 0; }
+        .sidebar-overlay { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); z-index: 1500; display: none; 
+        }
+        .sidebar-overlay.active { display: block; }
+
+        .nav-link { 
+            display: flex; align-items: center; gap: 12px; color: var(--texto-med); 
+            text-decoration: none; padding: 15px; border-radius: 12px; 
+            font-weight: 700; font-size: 14px; margin-bottom: 4px; transition: 0.2s; 
+        }
+        .nav-link.active, .nav-link:hover { background: rgba(236, 26, 124, 0.1); color: var(--magenta); }
+        .notif-badge { background: var(--alerta); color: #FFF; font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 6px; margin-left: auto; display: none; }
+
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ==========================================
+           3. CSS EXCLUSIVO DOS NODES E PLANOS
+           ========================================== */
+        .main-content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        
         .grid-resumo { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-        .card-mini { background: var(--card); border: 1px solid var(--borda); padding: 15px; border-radius: 16px; text-align: center; }
+        .card-mini { background: var(--card); border: 1px solid var(--borda); padding: 15px; border-radius: 12px; text-align: center; }
         .card-mini span { font-size: 10px; color: var(--texto-med); text-transform: uppercase; display: block; margin-bottom: 5px; }
-        .card-mini strong { font-size: 16px; color: var(--cyan); }
+        .card-mini strong { font-size: 16px; color: var(--cyan); font-weight: 900; }
 
         .tabs-niveis { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
-        .tab-btn { background: #1A202C; border: 1px solid var(--borda); color: var(--texto-med); padding: 12px 20px; border-radius: 12px; font-weight: 800; font-size: 11px; white-space: nowrap; cursor: pointer; }
+        .tab-btn { background: #1A202C; border: 1px solid var(--borda); color: var(--texto-med); padding: 12px 20px; border-radius: 8px; font-weight: 800; font-size: 11px; white-space: nowrap; cursor: pointer; }
         .tab-btn.active { background: var(--magenta); color: #FFF; border-color: var(--magenta); }
 
-        .node-card { background: var(--card); border: 1px solid var(--borda); border-radius: 20px; padding: 20px; margin-bottom: 15px; position: relative; overflow: hidden; }
+        .node-card { background: var(--card); border: 1px solid var(--borda); border-radius: 16px; padding: 20px; margin-bottom: 15px; position: relative; overflow: hidden; }
         .node-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
-        .node-header h3 { font-size: 18px; color: #FFF; }
+        .node-header h3 { font-size: 16px; font-weight: 900; color: #FFF; }
         .node-price { font-size: 18px; font-weight: 900; color: var(--verde); display: flex; flex-direction: column; align-items: flex-end; }
         .perc-badge { font-size: 10px; background: rgba(0, 255, 255, 0.1); color: var(--cyan); padding: 3px 8px; border-radius: 6px; margin-top: 4px; font-weight: 900; }
         
         .node-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; font-size: 12px; color: var(--texto-med); }
         .node-info b { color: #FFF; }
         
-        .node-footer { display: flex; gap: 10px; border-top: 1px solid var(--borda); padding-top: 15px; }
-        .btn-node { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 800; font-size: 11px; cursor: pointer; text-transform: uppercase; }
+        .node-footer { display: flex; gap: 10px; border-top: 1px dashed var(--borda); padding-top: 15px; }
+        .btn-node { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer; text-transform: uppercase; }
         .btn-edit { background: #1A202C; color: var(--cyan); border: 1px solid var(--borda); }
         .btn-users { background: rgba(0, 255, 255, 0.1); color: var(--cyan); }
+        
+        .btn-add { background: var(--verde); color: #000; width: 100%; margin-top: 20px; padding: 18px; font-size: 13px; border-radius: 12px; font-weight: 900; text-transform: uppercase; border: none; cursor: pointer; }
+
+        /* Estilo dos Modais Flat */
+        .modal-base { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-body { background: var(--card); border: 1px solid var(--borda); width: 100%; max-width: 500px; border-radius: 16px; padding: 25px; max-height: 90vh; overflow-y: auto; }
+        .modal-title { font-size: 16px; color: var(--cyan); margin-bottom: 20px; font-weight: 900; text-transform: uppercase; }
+        
+        .input-dark { width: 100%; background: #1A202C; border: 1px solid var(--borda); color: #FFF; padding: 12px; border-radius: 8px; outline: none; margin-bottom: 15px; }
+        .input-dark:focus { border-color: var(--cyan); }
+        .input-label { font-size: 10px; color: var(--texto-med); text-transform: uppercase; margin-bottom: 5px; display: block; font-weight: 700; }
+        
+        .calc-display { font-size: 11px; color: var(--cyan); padding: 10px; background: rgba(0, 255, 255, 0.05); border-radius: 8px; border-left: 3px solid var(--cyan); line-height: 1.5; }
     </style>
 </head>
 <body>
     <header class="header-admin">
         <div class="menu-icon" onclick="toggleSidebar()">☰</div>
-        <div class="header-title">GESTÃO DE NODES (INTELIGÊNCIA %)</div>
+        <div class="header-title">GESTÃO DE NODES</div>
+        <div style="width: 24px;"></div>
     </header>
 
     <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
     <nav class="sidebar" id="sidebar">
-        <!-- MENU NATIVO -->
         <div style="text-align: center; margin-bottom: 20px;">
             <h2 style="font-size: 22px; color: var(--magenta); letter-spacing: 2px;">BLACKROCK</h2>
             <p style="font-size: 9px; color: var(--texto-med); text-transform: uppercase;">Central de Controle</p>
@@ -80,47 +141,43 @@
             <p style="text-align:center; padding:30px; color:var(--texto-med);">Sincronizando Matemática dos Nodes...</p>
         </div>
 
-        <button class="btn-node" style="background:var(--verde); color:#000; width:100%; margin-top:20px; padding:18px; font-size:13px;" onclick="abrirForm()">➕ CRIAR NODE COM % INTELIGENTE</button>
+        <button class="btn-add fade-in" onclick="abrirForm()">➕ CRIAR NODE COM % INTELIGENTE</button>
     </div>
 
-    <!-- MODAL DE CRIAÇÃO/EDIÇÃO DE NODE -->
-    <div id="modalForm" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px;">
-        <div style="background:var(--card); border:1px solid var(--borda); width:100%; max-width:500px; border-radius:20px; padding:25px;">
-            <h2 id="form-title" style="font-size:18px; color:var(--cyan); margin-bottom:20px;">Configurar Node</h2>
+    <div class="modal-base" id="modalForm">
+        <div class="modal-body">
+            <h2 class="modal-title" id="form-title">Configurar Node</h2>
             <input type="hidden" id="node-id">
             
-            <div style="display:grid; gap:15px;">
-                <input type="text" id="node-nome" placeholder="Nome (Ex: NODE 1)" style="width:100%; background:#1A202C; border:1px solid var(--borda); color:#FFF; padding:12px; border-radius:10px; outline:none;">
-                
-                <select id="node-nivel" style="width:100%; background:#1A202C; border:1px solid var(--borda); color:#FFF; padding:12px; border-radius:10px;">
-                    <option value="STANDARD">STANDARD (5 Tarefas)</option>
-                    <option value="PREMIUM PLUS">PREMIUM PLUS (10 Tarefas)</option>
-                    <option value="VIP GOLD">VIP GOLD (15 Tarefas)</option>
-                </select>
-                
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                    <div>
-                        <label style="font-size:10px; color:var(--texto-med);">Valor de Entrada (MZN)</label>
-                        <input type="number" id="node-valor" oninput="calcularGanhos()" style="width:100%; background:#1A202C; border:1px solid var(--borda); color:#FFF; padding:12px; border-radius:10px;">
-                    </div>
-                    <div>
-                        <label style="font-size:10px; color:var(--texto-med);">Percentagem Diária (%)</label>
-                        <input type="number" id="node-perc" step="0.1" max="50" placeholder="Ex: 4" oninput="calcularGanhos()" style="width:100%; background:rgba(236, 26, 124, 0.1); border:1px solid var(--magenta); color:#FFF; padding:12px; border-radius:10px;">
-                    </div>
-                </div>
-
+            <label class="input-label">Nome do Contrato</label>
+            <input type="text" id="node-nome" class="input-dark" placeholder="Nome (Ex: NODE 1)">
+            
+            <label class="input-label">Estrato (Nível de Risco)</label>
+            <select id="node-nivel" class="input-dark">
+                <option value="STANDARD">STANDARD (5 Tarefas)</option>
+                <option value="PREMIUM PLUS">PREMIUM PLUS (10 Tarefas)</option>
+                <option value="VIP GOLD">VIP GOLD (15 Tarefas)</option>
+            </select>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <div>
-                    <label style="font-size:10px; color:var(--texto-med);">Duração (Dias)</label>
-                    <input type="number" id="node-dura" oninput="calcularGanhos()" style="width:100%; background:#1A202C; border:1px solid var(--borda); color:#FFF; padding:12px; border-radius:10px;">
+                    <label class="input-label">Valor de Entrada (MZN)</label>
+                    <input type="number" id="node-valor" class="input-dark" oninput="calcularGanhos()">
                 </div>
-
                 <div>
-                    <label style="font-size:10px; color:var(--texto-med);">Ganho Diário (Bloqueado/Automático)</label>
-                    <input type="number" id="node-ganho" readonly style="width:100%; background:#000; border:1px dashed var(--verde); color:var(--verde); padding:12px; border-radius:10px; font-weight:900;">
-                    <div id="calc-display" style="font-size:11px; color:var(--cyan); margin-top:8px; padding:8px; background:rgba(0, 255, 255, 0.05); border-radius:6px; border-left:3px solid var(--cyan);">
-                        Preencha o valor e a percentagem para calcular.
-                    </div>
+                    <label class="input-label">Percentagem Diária (%)</label>
+                    <input type="number" id="node-perc" class="input-dark" step="0.1" max="50" placeholder="Ex: 4" style="background:rgba(236,26,124,0.1); border-color:var(--magenta);" oninput="calcularGanhos()">
                 </div>
+            </div>
+
+            <label class="input-label">Duração em Dias</label>
+            <input type="number" id="node-dura" class="input-dark" oninput="calcularGanhos()">
+
+            <label class="input-label">Ganho Diário Calculado</label>
+            <input type="number" id="node-ganho" class="input-dark" readonly style="background:#000; border-color:var(--verde); color:var(--verde); font-weight:900;">
+            
+            <div id="calc-display" class="calc-display">
+                Preencha o valor e a percentagem para calcular o retorno.
             </div>
 
             <div style="display:flex; gap:10px; margin-top:20px;">
@@ -130,41 +187,86 @@
         </div>
     </div>
 
-    <!-- MODAL DE USUÁRIOS NO PLANO -->
-    <div id="modalUsers" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px;">
-        <div style="background:var(--card); border:1px solid var(--borda); width:100%; max-width:600px; border-radius:20px; padding:25px; max-height:80vh; overflow-y:auto;">
+    <div class="modal-base" id="modalUsers">
+        <div class="modal-body">
             <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
-                <h2 id="user-title" style="font-size:16px; color:var(--magenta);">Usuários Ativos</h2>
-                <button onclick="document.getElementById('modalUsers').style.display='none'" style="background:none; border:none; color:#FFF; font-weight:900;">X</button>
+                <h2 class="modal-title" id="user-title" style="margin-bottom:0; color:var(--magenta);">Usuários Ativos</h2>
+                <button onclick="document.getElementById('modalUsers').style.display='none'" style="background:none; border:none; color:#FFF; font-weight:900; font-size:16px;">X</button>
             </div>
             <div id="user-list"></div>
         </div>
     </div>
 
-    <!-- 🚀 CÉREBRO GLOBAL -->
-<script src="admin_global.js?v=2"></script>
-
     <script>
-        // O código JS exclusivo das Configs dos Nodes (Regras Intocadas)
+        const URL_BASE = 'https://blackrock-gest-o.onrender.com';
+        const ADMIN_TOKEN = localStorage.getItem('br_admin_token');
+
+        // Proteção
+        if (!ADMIN_TOKEN) window.location.href = 'admin_login.html';
+
+        // Interface Geral
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('active'); 
+            document.getElementById('overlay').classList.toggle('active'); 
+        }
+
+        function logout() { 
+            if(confirm("Encerrar sessão?")) {
+                localStorage.removeItem('br_admin_token'); 
+                localStorage.removeItem('br_admin_info'); 
+                window.location.href = 'admin_login.html'; 
+            }
+        }
+
+        // Segurança Anti-XSS
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>'"]/g, match => {
+                const escapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' };
+                return escapeMap[match];
+            });
+        }
+
+        // Radar Global Embutido
+        async function radarGlobalAlertas() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/alertas-globais`, { headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } });
+                if (!res.ok) return;
+                const dados = await res.json();
+                ['fin', 'chat', 'notif'].forEach(tipo => {
+                    const badge = document.getElementById(`badge-${tipo}`);
+                    const valor = dados[tipo === 'fin' ? 'financeiro' : tipo === 'notif' ? 'notificacoes' : 'chat'];
+                    if (badge) {
+                        if(valor > 0) { badge.innerText = valor; badge.style.display = 'inline-block'; } 
+                        else { badge.style.display = 'none'; }
+                    }
+                });
+            } catch(e) {}
+        }
+
+        // Motor de Configuração de Nodes
         let todosPlanos = [];
         let nivelAtual = 'STANDARD';
 
         window.onload = () => {
             carregarDados();
+            radarGlobalAlertas();
+            setInterval(radarGlobalAlertas, 15000);
         };
 
         async function carregarDados() {
             try {
-                // Utilizando a variável ADMIN_TOKEN do admin_global.js
                 const res = await fetch(`${URL_BASE}/api/admin/planos/resumo`, { 
                     headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } 
                 });
-                const data = await res.json();
-                todosPlanos = data.planos;
-                document.getElementById('st-total').innerText = todosPlanos.length;
-                document.getElementById('st-capital').innerText = Number(data.totalInvestido).toLocaleString() + " MZN";
-                filtrarNivel(nivelAtual, document.querySelector('.tab-btn.active'));
-            } catch(e) { console.error(e); }
+                if(res.ok) {
+                    const data = await res.json();
+                    todosPlanos = data.planos;
+                    document.getElementById('st-total').innerText = todosPlanos.length;
+                    document.getElementById('st-capital').innerText = Number(data.totalInvestido).toLocaleString('pt-MZ') + " MZN";
+                    filtrarNivel(nivelAtual, document.querySelector('.tab-btn.active'));
+                }
+            } catch(e) { console.error("Falha ao carregar Nodes."); }
         }
 
         function filtrarNivel(nivel, btn) {
@@ -176,35 +278,36 @@
             const container = document.getElementById('lista-planos');
             
             if(filtrados.length === 0) {
-                container.innerHTML = `<p style="text-align:center; padding:30px; color:var(--texto-med);">Nenhum node criado neste estrato.</p>`;
+                container.innerHTML = `<p style="text-align:center; padding:30px; color:var(--texto-med);">Nenhum node ativo neste estrato.</p>`;
                 return;
             }
 
             container.innerHTML = filtrados.map(p => {
                 const pct = p.percentagem ? p.percentagem : ((p.ganhoDiario / p.valor) * 100).toFixed(1);
+                const nomeSeguro = escapeHTML(p.nome);
                 
                 return `
                 <div class="node-card fade-in">
                     <div class="node-header">
-                        <h3>${p.nome}</h3>
+                        <h3>${nomeSeguro}</h3>
                         <div class="node-price">
-                            ${p.valor.toLocaleString()} MZN
+                            ${Number(p.valor).toLocaleString('pt-MZ')} MZN
                             <span class="perc-badge">${pct}% AO DIA</span>
                         </div>
                     </div>
                     <div class="node-info">
-                        <div>Rendimento: <b>${p.ganhoDiario.toLocaleString()} MZN/dia</b></div>
-                        <div>Duração: <b>${p.duracao} Dias</b></div>
-                        <div>Ganho Total: <b style="color:var(--verde)">${p.ganhoTotal.toLocaleString()} MZN</b></div>
-                        <div>Tarefas: <b>${p.tarefas}</b></div>
+                        <div>Lucro Diário: <b>${Number(p.ganhoDiario).toLocaleString('pt-MZ')} MZN</b></div>
+                        <div>Validade: <b>${p.duracao} Dias</b></div>
+                        <div>Lucro Total: <b style="color:var(--verde)">${Number(p.ganhoTotal).toLocaleString('pt-MZ')} MZN</b></div>
+                        <div>Tarefas/dia: <b>${p.tarefas}</b></div>
                     </div>
                     <div style="font-size:10px; color:var(--cyan); margin-bottom:15px; text-transform:uppercase;">
-                        👥 <b>${p.usuariosAtivos}</b> Usuários Investindo
+                        👥 <b>${p.usuariosAtivos || 0}</b> Usuários Investindo
                     </div>
                     <div class="node-footer">
                         <button class="btn-node btn-edit" onclick="abrirEdicao('${p._id}')">Ajustar Regras</button>
-                        <button class="btn-node" style="background: var(--alerta); color: #FFF; margin-left: 5px;" onclick="apagarNode('${p._id}', '${p.nome}')">Apagar</button>
-                        <button class="btn-node btn-users" onclick="verUsuarios('${p.nome}')">Ver Clientes</button>
+                        <button class="btn-node" style="background: rgba(255,75,75,0.1); border:1px solid var(--alerta); color: var(--alerta);" onclick="apagarNode('${p._id}', '${nomeSeguro}')">Apagar</button>
+                        <button class="btn-node btn-users" onclick="verUsuarios('${nomeSeguro}')">Clientes</button>
                     </div>
                 </div>
             `}).join('');
@@ -216,7 +319,7 @@
             const dura = Number(document.getElementById('node-dura').value) || 0;
 
             if(perc > 50) { 
-                alert("Aviso: Limite de segurança atingido. A percentagem máxima permitida por segurança é de 50%.");
+                alert("Bloqueio de Segurança: A percentagem diária não pode ultrapassar 50%.");
                 perc = 50;
                 document.getElementById('node-perc').value = 50;
             }
@@ -225,7 +328,7 @@
             const ganhoTotal = ganhoDiario * dura;
 
             document.getElementById('node-ganho').value = ganhoDiario.toFixed(2);
-            document.getElementById('calc-display').innerHTML = `Sistema Automático: <br><strong style="color:#FFF;">${perc}%</strong> ao dia = <strong style="color:var(--verde);">${ganhoDiario.toFixed(2)} MZN/dia</strong> <br>Retorno Total Previsto: <strong style="color:var(--cyan);">${ganhoTotal.toFixed(2)} MZN</strong>`;
+            document.getElementById('calc-display').innerHTML = `Sistema Matemático: <br><strong style="color:#FFF;">${perc}%</strong> ao dia = <strong style="color:var(--verde);">${ganhoDiario.toFixed(2)} MZN/dia</strong> <br>Retorno Total Acumulado: <strong style="color:var(--cyan);">${ganhoTotal.toFixed(2)} MZN</strong>`;
         }
 
         function abrirForm() { 
@@ -235,8 +338,8 @@
             document.getElementById('node-perc').value = '';
             document.getElementById('node-dura').value = '';
             document.getElementById('node-ganho').value = '';
-            document.getElementById('form-title').innerText = 'Novo Node';
-            document.getElementById('calc-display').innerText = 'Preencha o valor e a percentagem para calcular.';
+            document.getElementById('form-title').innerText = 'Nova Constituição de Node';
+            document.getElementById('calc-display').innerText = 'Preencha o valor e a percentagem para calcular o retorno.';
             document.getElementById('modalForm').style.display = 'flex'; 
         }
 
@@ -248,14 +351,15 @@
             document.getElementById('node-valor').value = p.valor;
             document.getElementById('node-perc').value = p.percentagem || ((p.ganhoDiario / p.valor) * 100).toFixed(1);
             document.getElementById('node-dura').value = p.duracao;
-            document.getElementById('form-title').innerText = 'Editar ' + p.nome;
+            document.getElementById('form-title').innerText = 'Modificar Regras: ' + p.nome;
             calcularGanhos(); 
             document.getElementById('modalForm').style.display = 'flex';
         }
 
-        async function salvarNode() {
+        function fecharForm() { document.getElementById('modalForm').style.display = 'none'; }
+async function salvarNode() {
             const perc = Number(document.getElementById('node-perc').value);
-            if(perc < 0.1) return alert("A percentagem diária não pode ser menor que 0.1%.");
+            if(perc < 0.1) return alert("A percentagem diária mínima permitida é de 0.1%.");
 
             const valorNum = Number(document.getElementById('node-valor').value);
             const duracaoNum = Number(document.getElementById('node-dura').value);
@@ -268,8 +372,7 @@
             let tarefasNum = 5; 
             if(nivelStr === 'PREMIUM PLUS') tarefasNum = 10;
             if(nivelStr === 'VIP GOLD') tarefasNum = 15;
-
-            const payload = {
+const payload = {
                 nome: nomeNode,
                 nivel: nivelStr,
                 valor: valorNum,
@@ -278,7 +381,7 @@
                 ganhoDiario: ganhoDiarioNum,
                 ganhoTotal: ganhoTotalNum,
                 tarefas: tarefasNum,
-                validade: duracaoNum, // Lógica mantida intacta
+                validade: duracaoNum, 
                 ganhoDia: ganhoDiarioNum,
                 sessoes: tarefasNum 
             };
@@ -287,8 +390,7 @@
             if (idNode && idNode.trim() !== "") {
                 payload.id = idNode;
             }
-            
-            try {
+try {
                 const res = await fetch(`${URL_BASE}/api/admin/planos/salvar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_TOKEN}` },
@@ -296,46 +398,45 @@
                 });
                 
                 if(res.ok) { 
-                    alert("Plano Salvo com Sucesso!"); 
-                    location.reload(); 
+                    fecharForm();
+                    carregarDados(); 
                 } else { 
                     const err = await res.json(); 
-                    alert("O SERVIDOR REJEITOU PORQUE: " + JSON.stringify(err)); 
+                    alert("A Diretoria bloqueou: " + JSON.stringify(err)); 
                 }
             } catch(e) {
-                alert("Falha de conexão. O servidor pode estar desligado.");
+                alert("Falha de conexão com a infraestrutura principal.");
             }
-        }        
-
-        async function verUsuarios(nomeNode) {
-            const res = await fetch(`${URL_BASE}/api/admin/planos/usuarios/${nomeNode}`, { 
-                headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } 
-            });
-            const users = await res.json();
-            document.getElementById('user-title').innerText = `Clientes em ${nomeNode}`;
-            document.getElementById('user-list').innerHTML = users.map(u => `
-                <div style="padding:15px; border-bottom:1px solid #1A202C; display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:12px;"><b>${u.nome}</b><br><span style="color:gray;">ID: ${u.idUnico}</span></div>
-                    <div style="font-size:11px; text-align:right;">Expira em:<br><b>${new Date(u.dataExpiracaoPlano).toLocaleDateString()}</b></div>
-                </div>
-            `).join('') || '<p style="color:gray; padding:20px;">Nenhum usuário neste plano.</p>';
-            document.getElementById('modalUsers').style.display = 'flex';
         }
-
-        function fecharForm() { document.getElementById('modalForm').style.display = 'none'; }
-
-        async function apagarNode(id, nome) {
-            if(!confirm(`Tem a certeza que deseja APAGAR DEFINITIVAMENTE o plano ${nome}?`)) return;
+async function verUsuarios(nomeNode) {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/planos/usuarios/${encodeURIComponent(nomeNode)}`, { 
+                    headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } 
+                });
+                const users = await res.json();
+                document.getElementById('user-title').innerText = `Contratos Ativos: ${escapeHTML(nomeNode)}`;
+                document.getElementById('user-list').innerHTML = users.map(u => `
+                    <div style="padding:15px; border-bottom:1px solid #1A202C; display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:12px;"><b>${escapeHTML(u.nome)}</b><br><span style="color:var(--texto-med);">ID: ${escapeHTML(u.idUnico)}</span></div>
+                        <div style="font-size:11px; text-align:right;">Expira em:<br><b style="color:var(--cyan);">${new Date(u.dataExpiracaoPlano).toLocaleDateString('pt-PT')}</b></div>
+                    </div>
+                `).join('') || '<p style="color:var(--texto-med); padding:20px; text-align:center;">Nenhum usuário investiu neste plano ainda.</p>';
+                document.getElementById('modalUsers').style.display = 'flex';
+            } catch (e) {
+                alert("Erro ao puxar lista de clientes.");
+            }
+        }
+async function apagarNode(id, nome) {
+            if(!confirm(`Tem a certeza que deseja DESTRUIR o plano ${nome}? Não há volta a dar.`)) return;
             try {
                 const res = await fetch(`${URL_BASE}/api/admin/planos/apagar/${id}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
                 });
                 if(res.ok) {
-                    alert("Node apagado com sucesso!");
-                    location.reload();
+                    carregarDados();
                 } else {
-               alert("Erro ao apagar o Node. Verifique a rota no Backend.");
+                    alert("Erro ao desativar Node de investimento.");
                 }
             } catch(e) {
                 console.error(e);
