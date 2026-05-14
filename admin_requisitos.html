@@ -2,37 +2,46 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>BlackRock Admin - Configurações Globais</title>
     <style>
+        /* ==========================================
+           1. FUNDAÇÃO & VARIÁVEIS (EMBUTIDO)
+           ========================================== */
         :root {
             --bg: #07090D; --card: #0F1219; --magenta: #EC1A7C; --cyan: #00FFFF;
             --verde: #38E090; --borda: #1A202C; --texto-med: #94A3B8; --alerta: #FF4B4B; --aviso: #F6E05E;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-        body { background: var(--bg); color: #FFF; min-height: 100vh; padding-top: 70px; overflow-x: hidden; scroll-behavior: smooth; }
+        
+        body { background: var(--bg); color: #FFF; min-height: 100dvh; padding-top: 70px; overflow-x: hidden; scroll-behavior: smooth; }
 
         .fade-in { animation: fadeIn 0.4s ease forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* HEADER E SIDEBAR NATIVOS */
-        .header-admin { position: fixed; top: 0; left: 0; width: 100%; height: 70px; background: rgba(15, 18, 25, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--borda); display: flex; align-items: center; padding: 0 20px; z-index: 1000; }
+        /* ==========================================
+           2. LAYOUT MASTER (SIDEBAR & HEADER)
+           ========================================== */
+        .header-admin { position: fixed; top: 0; left: 0; width: 100%; height: 70px; background: #0F1219; border-bottom: 1px solid var(--borda); display: flex; align-items: center; padding: 0 20px; z-index: 1000; }
         .menu-icon { font-size: 28px; cursor: pointer; color: var(--magenta); margin-right: 20px; }
         .header-title { font-size: 16px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--cyan); }
 
-        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: var(--card); border-right: 1px solid var(--borda); z-index: 2000; transition: 0.3s; padding: 30px 20px; display: flex; flex-direction: column; overflow-y: auto; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100dvh; background: var(--card); border-right: 1px solid var(--borda); z-index: 2000; transition: 0.3s; padding: 30px 20px; display: flex; flex-direction: column; overflow-y: auto; }
         .sidebar.active { left: 0; box-shadow: 20px 0 50px rgba(0,0,0,0.8); }
-        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1500; display: none; }
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.8); z-index: 1500; display: none; }
         .sidebar-overlay.active { display: block; }
+        
         .nav-link { display: flex; align-items: center; gap: 12px; color: var(--texto-med); text-decoration: none; padding: 15px; border-radius: 12px; font-weight: 700; font-size: 14px; margin-bottom: 4px; transition: 0.2s; }
-        .nav-link.active { background: rgba(0, 255, 255, 0.1); color: var(--cyan); }
+        .nav-link.active, .nav-link:hover { background: rgba(0, 255, 255, 0.1); color: var(--cyan); }
         .notif-badge { background: var(--alerta); color: #FFF; font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 20px; margin-left: auto; display: none; }
 
-        /* LAYOUT DE REGRAS MODULAR */
+        /* ==========================================
+           3. LAYOUT DE REGRAS E CONFIGURAÇÕES
+           ========================================== */
         .main-content { padding: 20px; max-width: 1000px; margin: 0 auto; padding-bottom: 120px; }
         .category-title { font-size: 12px; font-weight: 900; color: var(--texto-med); text-transform: uppercase; letter-spacing: 2px; margin: 30px 0 15px; border-left: 3px solid var(--magenta); padding-left: 10px; }
         
-        .config-card { background: var(--card); border: 1px solid var(--borda); border-radius: 16px; padding: 25px; margin-bottom: 20px; }
+        .config-card { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; padding: 25px; margin-bottom: 20px; }
         .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--borda); padding-bottom: 15px; }
         .card-header h3 { font-size: 15px; color: #FFF; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
         
@@ -42,14 +51,15 @@
         
         .input-group { margin-bottom: 15px; }
         .input-group label { display: block; font-size: 11px; color: var(--texto-med); text-transform: uppercase; margin-bottom: 8px; font-weight: 700; }
-        .input-dark { width: 100%; background: #1A202C; border: 1px solid var(--borda); color: #FFF; padding: 12px; border-radius: 10px; outline: none; font-size: 14px; transition: 0.3s; }
-        .input-dark:focus { border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,255,255,0.1); }
+        .input-dark { width: 100%; background: #1A202C; border: 1px solid var(--borda); color: #FFF; padding: 12px; border-radius: 8px; outline: none; font-size: 14px; transition: 0.3s; }
+        .input-dark:focus { border-color: var(--cyan); }
 
-        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 10px; border: 1px solid var(--borda); margin-top: 10px;}
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--borda); margin-top: 10px;}
         .toggle-label { font-size: 13px; color: #FFF; font-weight: 700;}
         
-        .floating-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 18, 25, 0.95); backdrop-filter: blur(10px); padding: 15px 20px; border-top: 1px solid var(--borda); display: flex; justify-content: center; z-index: 1000; }
-        .btn-master { width: 100%; max-width: 600px; background: var(--cyan); color: #000; border: none; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 14px; cursor: pointer; text-transform: uppercase; transition: 0.3s; box-shadow: 0 0 20px rgba(0,255,255,0.2); }
+        /* BOTÃO FLUTUANTE PROTEGIDO CONTRA TECLADO E IOS BOTTOM BAR */
+        .floating-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: #0F1219; padding: 15px 20px calc(15px + env(safe-area-inset-bottom)); border-top: 1px solid var(--borda); display: flex; justify-content: center; z-index: 1000; }
+        .btn-master { width: 100%; max-width: 600px; background: var(--cyan); color: #000; border: none; padding: 16px; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer; text-transform: uppercase; transition: 0.3s; }
         .btn-master:active { transform: scale(0.98); }
     </style>
 </head>
@@ -68,21 +78,21 @@
         <a href="admin_dashboard.html" class="nav-link">📊 Dashboard</a>
         <a href="admin_financeiro.html" class="nav-link">💰 Financeiro <span class="notif-badge" id="badge-fin">0</span></a>
         <a href="admin_usuarios.html" class="nav-link">👥 Usuários</a>
-        <a href="admin_rede.html" class="nav-link">🌳 Rede (Visualização)</a>
+        <a href="admin_rede.html" class="nav-link">🌳 Rede & Comissões</a>
         <a href="admin_configs.html" class="nav-link">⚙️ Planos (Nodes)</a>
-        <a href="admin_tarefas.html" class="nav-link">📋 Histórico Tarefas</a>
+        <a href="admin_tarefas.html" class="nav-link">📋 Controle de Tarefas</a>
         <a href="admin_feed.html" class="nav-link">📢 Feed & Mural</a>
         <a href="admin_chat.html" class="nav-link">💬 Suporte (SAC) <span class="notif-badge" id="badge-chat">0</span></a>
         <a href="admin_notificacoes.html" class="nav-link">🔔 Notificações <span class="notif-badge" id="badge-notif">0</span></a>
         <a href="admin_seguranca.html" class="nav-link" style="color: #F6E05E;">🛡️ Segurança & Fraude</a>
-        <a href="admin_requisitos.html" class="nav-link active">🛠️ Configuração Global</a>
+        <a href="admin_requisitos.html" class="nav-link active">🛠️ Sistema & Regras</a>
         <a href="admin_logs.html" class="nav-link">🧾 Logs do Sistema</a>
-        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--borda);">
+        <div style="margin-top: auto; padding-top: 20px;">
             <button class="nav-link" onclick="logout()" style="width: 100%; border: none; background: none; color: var(--alerta); cursor:pointer;">🚪 SAIR DO TERMINAL</button>
         </div>
     </nav>
 
-   <div class="main-content">
+    <div class="main-content">
         
         <div class="category-title">1. Área Financeira</div>
         
@@ -105,7 +115,6 @@
                 <div class="input-group"><label>Taxa de Saque (IVA %)</label><input type="number" id="sq-taxa" class="input-dark"></div>
                 <div class="input-group"><label>Limite Diário Global Rede (MZN)</label><input type="number" id="lim-total" class="input-dark" value="50000" placeholder="Proteção Anti-Quebra"></div>
             </div>
-            <!-- NOVO: CAIXA PARA AS INFORMAÇÕES IMPORTANTES DO SAQUE -->
             <div class="input-group" style="margin-top: 15px;">
                 <label>Informações Importantes (Regras de Levantamento)</label>
                 <textarea id="sq-info" class="input-dark" style="height: 80px; resize: none;" placeholder="1. Processamento de 2 a 24h..."></textarea>
@@ -179,24 +188,56 @@
     </div>
 
     <div class="floating-bar">
-        <button onclick="salvarConfiguracoes()" id="btn-salvar" class="btn-master">💾 APLICAR TODAS AS CONFIGURAÇÕES DE SISTEMA</button>
+        <button onclick="salvarConfiguracoes()" id="btn-salvar" class="btn-master">💾 APLICAR TODAS AS CONFIGURAÇÕES</button>
     </div>
-<script>
-        const URL_BASE = 'https://blackrock-gest-o.onrender.com';
 
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('active'); document.getElementById('overlay').classList.toggle('active'); }
-        function logout() { localStorage.removeItem('br_admin_token'); window.location.href = 'admin_login.html'; }
+    <script>
+        const URL_BASE = 'https://blackrock-gest-o.onrender.com';
+        const ADMIN_TOKEN = localStorage.getItem('br_admin_token');
+
+        // Proteção de Acesso
+        if (!ADMIN_TOKEN) window.location.href = 'admin_login.html';
+
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('active'); 
+            document.getElementById('overlay').classList.toggle('active'); 
+        }
+        
+        function logout() { 
+            if(confirm("Encerrar sessão na Diretoria?")) {
+                localStorage.removeItem('br_admin_token'); 
+                localStorage.removeItem('br_admin_info');
+                window.location.href = 'admin_login.html'; 
+            }
+        }
+
+        // Radar Global
+        async function radarGlobalAlertas() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin/alertas-globais`, { headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } });
+                if (!res.ok) return;
+                const dados = await res.json();
+                
+                ['fin', 'chat', 'notif'].forEach(tipo => {
+                    const badge = document.getElementById(`badge-${tipo}`);
+                    const valor = dados[tipo === 'fin' ? 'financeiro' : tipo === 'notif' ? 'notificacoes' : 'chat'];
+                    if (badge) {
+                        if(valor > 0) { badge.innerText = valor; badge.style.display = 'inline-block'; } 
+                        else { badge.style.display = 'none'; }
+                    }
+                });
+            } catch(e) {}
+        }
 
         window.onload = () => {
-            if(!localStorage.getItem('br_admin_token')) window.location.href = 'admin_login.html';
             carregarConfiguracoes();
-            verificarAlertas();
+            radarGlobalAlertas();
+            setInterval(radarGlobalAlertas, 15000);
         };
 
-        async function carregarConfiguracoes() {
+async function carregarConfiguracoes() {
             try {
-                // Aqui o servidor deverá responder com TODAS as variáveis num só JSON
-                const res = await fetch(`${URL_BASE}/api/admin/system`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('br_admin_token')}` } });
+                const res = await fetch(`${URL_BASE}/api/admin/system`, { headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` } });
                 const config = await res.json();
                 
                 // FINANÇAS
@@ -213,7 +254,8 @@
                 document.getElementById('sq-info').value = config.saqueInformacoes || "";
 
                 // REDE E TAREFAS
-                document.getElementById('cm-bonus').value = config.bonusPrimeiroDep || 100;
+                // 🚀 CORREÇÃO AQUI: Lê o nome antigo (bonusRede) ou o novo, e o padrão agora é 14!
+                document.getElementById('cm-bonus').value = config.bonusPrimeiroDep || config.bonusRede || 14;
                 document.getElementById('cm-n1').value = config.percN1 || 5;
                 document.getElementById('cm-n2').value = config.percN2 || 2;
                 document.getElementById('lim-user').value = config.limiteUsuarioDia || 5000;
@@ -250,15 +292,20 @@
                 emolaNum: document.getElementById('dp-emola').value, emolaNome: document.getElementById('dp-nome-emola').value,
                 depositoMsg: document.getElementById('dp-msg').value,
                 saqueAbre: document.getElementById('sq-abre').value, saqueFecha: document.getElementById('sq-fecha').value,
-                saqueTaxa: document.getElementById('sq-taxa').value, limiteGlobalDia: document.getElementById('lim-total').value,
+                saqueTaxa: Number(document.getElementById('sq-taxa').value), limiteGlobalDia: Number(document.getElementById('lim-total').value),
                 saqueAtivo: document.getElementById('sq-status').checked,
                 saqueInformacoes: document.getElementById('sq-info').value,
                 
                 // Redes e Tarefas
-                bonusPrimeiroDep: document.getElementById('cm-bonus').value, percN1: document.getElementById('cm-n1').value, percN2: document.getElementById('cm-n2').value,
-                limiteUsuarioDia: document.getElementById('lim-user').value,
-                tarefasStd: document.getElementById('tr-std').value, tarefasPre: document.getElementById('tr-pre').value, tarefasVip: document.getElementById('tr-vip').value,
-                tempoTarefaSeg: document.getElementById('tr-tempo').value, msgsTerminal: document.getElementById('msg-terminal').value,
+                // 🚀 CORREÇÃO AQUI: Envia os dois nomes para a BD não rejeitar!
+                bonusPrimeiroDep: Number(document.getElementById('cm-bonus').value), 
+                bonusRede: Number(document.getElementById('cm-bonus').value), 
+                
+                percN1: Number(document.getElementById('cm-n1').value), 
+                percN2: Number(document.getElementById('cm-n2').value),
+                limiteUsuarioDia: Number(document.getElementById('lim-user').value),
+                tarefasStd: Number(document.getElementById('tr-std').value), tarefasPre: Number(document.getElementById('tr-pre').value), tarefasVip: Number(document.getElementById('tr-vip').value),
+                tempoTarefaSeg: Number(document.getElementById('tr-tempo').value), msgsTerminal: document.getElementById('msg-terminal').value,
                 permitirUpgrade: document.getElementById('nd-upgrade').value === "sim",
 
                 // Sistema
@@ -272,23 +319,15 @@
             try {
                 const res = await fetch(`${URL_BASE}/api/admin/system`, {
                     method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('br_admin_token')}` },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${ADMIN_TOKEN}` },
                     body: JSON.stringify(payload)
                 });
                 if(res.ok) { alert("🎯 SISTEMA ATUALIZADO E SINCRONIZADO COM SUCESSO!"); }
-            } catch(e) { alert("ERRO DE CONEXÃO AO SALVAR."); } finally { btn.innerText = "💾 APLICAR TODAS AS CONFIGURAÇÕES DE SISTEMA"; }
+                else { alert("Falha na sincronização. Verifique os dados e tente novamente."); }
+            } catch(e) { alert("ERRO DE CONEXÃO AO SALVAR."); } 
+            finally { btn.innerText = "💾 APLICAR TODAS AS CONFIGURAÇÕES"; }
         }
-
-        async function verificarAlertas() {
-            try {
-                const res = await fetch(`${URL_BASE}/api/admin/alertas-globais`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('br_admin_token')}` } });
-                const dados = await res.json();
-                const bFin = document.getElementById('badge-fin'); const bChat = document.getElementById('badge-chat');
-                if(dados.financeiro > 0) { bFin.innerText = dados.financeiro; bFin.style.display = 'inline-block'; } else { bFin.style.display = 'none'; }
-                if(dados.chat > 0) { bChat.innerText = dados.chat; bChat.style.display = 'inline-block'; } else { bChat.style.display = 'none'; }
-            } catch(e) {}
-        }
-        setInterval(verificarAlertas, 15000);
+            
     </script>
 </body>
 </html>
