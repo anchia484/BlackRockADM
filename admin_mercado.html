@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin - Mercado Premium | BlackRock</title>
+    <style>
+        :root {
+            --bg-canvas: #05070A; --bg-card: #0F1219; --borda-nitida: #1A202C; 
+            --texto-high: #FFFFFF; --texto-med: #94A3B8; --magenta: #EC1A7C; 
+            --verde-menta: #38E090; --cyan-neon: #00FFFF; --alerta: #FF4B4B;
+            --input-bg: #141824;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+        body { background: var(--bg-canvas); color: var(--texto-high); min-height: 100vh; padding: 20px; padding-bottom: 100px; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--borda-nitida); padding-bottom: 15px; }
+        .header h1 { font-size: 20px; font-weight: 900; color: var(--cyan-neon); text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+        .btn-voltar { background: var(--bg-card); border: 1px solid var(--borda-nitida); color: #FFF; padding: 8px 15px; border-radius: 8px; text-decoration: none; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+
+        /* STATUS GLOBAL DO MERCADO */
+        .master-switch { background: linear-gradient(145deg, #1A1525, var(--bg-card)); border: 1px solid #3d1c54; border-radius: 16px; padding: 25px; margin-bottom: 30px; text-align: center; }
+        .master-switch h2 { font-size: 16px; color: #FFF; margin-bottom: 15px; text-transform: uppercase; }
+        .switch-container { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        .btn-status { padding: 12px 30px; border-radius: 8px; font-weight: 900; font-size: 13px; text-transform: uppercase; border: 1px solid var(--borda-nitida); cursor: pointer; transition: 0.3s; }
+        .btn-status.on { background: rgba(56,224,144,0.1); color: var(--verde-menta); border-color: var(--verde-menta); }
+        .btn-status.off { background: rgba(255,75,75,0.1); color: var(--alerta); border-color: var(--alerta); }
+        .btn-status.inativo { background: var(--bg-canvas); color: var(--texto-med); }
+        
+        .timer-config { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px dashed rgba(255,255,255,0.1); }
+        .timer-config label { font-size: 11px; color: var(--texto-med); font-weight: 800; text-transform: uppercase; }
+        .timer-config input { background: var(--input-bg); border: 1px solid var(--cyan-neon); color: #FFF; padding: 10px; border-radius: 8px; font-family: monospace; }
+        .btn-salvar-global { background: var(--magenta); color: #FFF; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; margin-top: 10px; }
+
+        /* GRID CRIAR / LISTAR PRODUTOS */
+        .section-title { font-size: 14px; font-weight: 900; color: var(--texto-med); margin-bottom: 15px; text-transform: uppercase; border-left: 3px solid var(--magenta); padding-left: 10px; }
+        
+        .form-card { background: var(--bg-card); border: 1px solid var(--borda-nitida); border-radius: 16px; padding: 20px; margin-bottom: 30px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group.full { grid-column: span 2; }
+        .input-group label { font-size: 10px; color: var(--texto-med); font-weight: 800; text-transform: uppercase; }
+        .input-group input, .input-group select { background: var(--input-bg); border: 1px solid var(--borda-nitida); color: #FFF; padding: 12px; border-radius: 8px; font-size: 13px; outline: none; }
+        .input-group input:focus, .input-group select:focus { border-color: var(--cyan-neon); }
+        .btn-criar { grid-column: span 2; background: var(--cyan-neon); color: #000; font-weight: 900; border: none; padding: 15px; border-radius: 8px; cursor: pointer; text-transform: uppercase; margin-top: 10px; }
+
+        .lista-produtos { display: flex; flex-direction: column; gap: 15px; }
+        .prod-item { background: var(--bg-card); border: 1px solid var(--borda-nitida); padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .prod-info h3 { font-size: 15px; font-weight: 900; color: #FFF; margin-bottom: 5px; }
+        .prod-info p { font-size: 11px; color: var(--texto-med); }
+        .prod-info strong { color: var(--verde-menta); }
+        .prod-acoes { display: flex; gap: 10px; }
+        .btn-apagar { background: rgba(255,75,75,0.1); color: var(--alerta); border: 1px solid var(--alerta); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 800; font-size: 10px; text-transform: uppercase; }
+
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--verde-menta); color: #000; padding: 15px 30px; border-radius: 30px; font-size: 13px; font-weight: 800; display: none; z-index: 4000; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg> Gestão do Mercado</h1>
+        <a href="admin_dashboard.html" class="btn-voltar">Voltar</a>
+    </div>
+
+    <div id="toast">Aviso</div>
+
+    <div class="master-switch">
+        <h2>Interruptor Global do Mercado</h2>
+        <div class="switch-container">
+            <button class="btn-status inativo" id="btn-on" onclick="setMercado(true)">ABRIR MERCADO 🔥</button>
+            <button class="btn-status inativo" id="btn-off" onclick="setMercado(false)">FECHAR MERCADO 🔒</button>
+        </div>
+        <div class="timer-config">
+            <label>Data de Encerramento (Visível para os Clientes):</label>
+            <input type="datetime-local" id="dataFecho">
+            <button class="btn-salvar-global" onclick="salvarConfig()">GUARDAR DEFINIÇÕES</button>
+        </div>
+    </div>
+
+    <div class="section-title">Adicionar Operação Estratégica</div>
+    <div class="form-card">
+        <div class="form-grid">
+            <div class="input-group full">
+                <label>Nome do Produto (Ex: Sigma-7)</label>
+                <input type="text" id="p-nome" placeholder="Nome chamativo">
+            </div>
+            <div class="input-group">
+                <label>Aplicação Mínima (MZN)</label>
+                <input type="number" id="p-min" placeholder="Ex: 500">
+            </div>
+            <div class="input-group">
+                <label>Retorno (%)</label>
+                <input type="number" id="p-retorno" placeholder="Ex: 60">
+            </div>
+            <div class="input-group">
+                <label>Duração (Dias)</label>
+                <input type="number" id="p-dias" placeholder="Ex: 7">
+            </div>
+            <div class="input-group">
+                <label>Status Inicial</label>
+                <select id="p-status">
+                    <option value="ativo">Ativo (Visível)</option>
+                    <option value="oculto">Oculto (Rascunho)</option>
+                </select>
+            </div>
+            <button class="btn-criar" onclick="criarProduto()">+ CRIAR PRODUTO</button>
+        </div>
+    </div>
+
+    <div class="section-title">Prateleira de Produtos</div>
+    <div class="lista-produtos" id="lista-produtos">
+        <p style="text-align:center; color:var(--texto-med); font-size:12px;">A carregar prateleira...</p>
+    </div>
+
+    <script>
+        const URL_BASE = 'https://blackrock-gest-o.onrender.com';
+        const token = localStorage.getItem('br_admin_token');
+
+        window.onload = () => {
+            if(!token) window.location.href = 'admin_login.html';
+            carregarConfig();
+            carregarProdutos();
+        };
+
+        function mostrarNotificacao(msg, cor = 'var(--verde-menta)', corTexto = '#000') {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.style.background = cor; t.style.color = corTexto;
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        // ================= CONFIGURAÇÃO GLOBAL =================
+        let mercadoAbertoGlobal = false;
+
+        async function carregarConfig() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin-mercado/config`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if(res.ok) {
+                    const data = await res.json();
+                    mercadoAbertoGlobal = data.isMercadoAberto;
+                    atualizarBotoes(mercadoAbertoGlobal);
+                    if(data.dataFechamento) {
+                        const d = new Date(data.dataFechamento);
+                        document.getElementById('dataFecho').value = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                    }
+                }
+            } catch(e) { mostrarNotificacao('Erro ao ler configs', 'var(--alerta)', '#FFF'); }
+        }
+
+        function setMercado(estado) {
+            mercadoAbertoGlobal = estado;
+            atualizarBotoes(estado);
+        }
+
+        function atualizarBotoes(estado) {
+            const btnOn = document.getElementById('btn-on');
+            const btnOff = document.getElementById('btn-off');
+            
+            if(estado) {
+                btnOn.className = 'btn-status on';
+                btnOff.className = 'btn-status inativo';
+            } else {
+                btnOn.className = 'btn-status inativo';
+                btnOff.className = 'btn-status off';
+            }
+        }
+
+        async function salvarConfig() {
+            const dataF = document.getElementById('dataFecho').value;
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin-mercado/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ isMercadoAberto: mercadoAbertoGlobal, dataFechamento: dataF || null })
+                });
+                const data = await res.json();
+                if(res.ok) mostrarNotificacao(data.mensagem);
+                else mostrarNotificacao(data.erro, 'var(--alerta)', '#FFF');
+            } catch(e) { mostrarNotificacao('Erro ao salvar.', 'var(--alerta)', '#FFF'); }
+        }
+
+        // ================= GESTÃO DE PRODUTOS =================
+        async function carregarProdutos() {
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin-mercado/produtos`, { headers: { 'Authorization': `Bearer ${token}` } });
+                if(res.ok) {
+                    const produtos = await res.json();
+                    const container = document.getElementById('lista-produtos');
+                    
+                    if(produtos.length === 0) {
+                        container.innerHTML = `<p style="text-align:center; color:var(--texto-med); font-size:12px;">Nenhum produto criado.</p>`;
+                        return;
+                    }
+
+                    container.innerHTML = produtos.map(p => `
+                        <div class="prod-item">
+                            <div class="prod-info">
+                                <h3>${p.nome} <span style="font-size:9px; background:var(--input-bg); padding:2px 5px; border-radius:4px; margin-left:5px;">${p.status.toUpperCase()}</span></h3>
+                                <p>Min: ${p.valorMinimo} MZN | Duração: ${p.duracaoDias} Dias | Retorno: <strong>+${p.retornoPercentual}%</strong></p>
+                            </div>
+                            <div class="prod-acoes">
+                                <button class="btn-apagar" onclick="apagarProduto('${p._id}')">Apagar</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {}
+        }
+
+        async function criarProduto() {
+            const nome = document.getElementById('p-nome').value;
+            const valorMinimo = document.getElementById('p-min').value;
+            const duracaoDias = document.getElementById('p-dias').value;
+            const retornoPercentual = document.getElementById('p-retorno').value;
+            const status = document.getElementById('p-status').value;
+
+            if(!nome || !valorMinimo || !duracaoDias || !retornoPercentual) {
+                return mostrarNotificacao('Preencha os campos obrigatórios!', 'var(--alerta)', '#FFF');
+            }
+
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin-mercado/produtos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ nome, valorMinimo: Number(valorMinimo), duracaoDias: Number(duracaoDias), retornoPercentual: Number(retornoPercentual), status })
+                });
+                
+                if(res.ok) {
+                    mostrarNotificacao('Produto criado com sucesso!');
+                    document.getElementById('p-nome').value = '';
+                    document.getElementById('p-min').value = '';
+                    document.getElementById('p-dias').value = '';
+                    document.getElementById('p-retorno').value = '';
+                    carregarProdutos();
+                } else {
+                    const d = await res.json();
+                    mostrarNotificacao(d.erro, 'var(--alerta)', '#FFF');
+                }
+            } catch(e) {}
+        }
+
+        async function apagarProduto(id) {
+            if(!confirm('Tem a certeza que deseja apagar este produto?')) return;
+            try {
+                const res = await fetch(`${URL_BASE}/api/admin-mercado/produtos/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const d = await res.json();
+                if(res.ok) { mostrarNotificacao(d.mensagem); carregarProdutos(); }
+                else mostrarNotificacao(d.erro, 'var(--alerta)', '#FFF');
+            } catch(e) {}
+        }
+    </script>
+
+    <script>
+    (function() {
+        const TOKEN_KEY = 'br_admin_token';
+        const URL_LOGIN = 'admin_login.html';
+        let temporizadorSessao = null;
+
+        function exibirModalExpiracao() {
+            if (document.getElementById('modal-expiracao-seguranca')) return;
+            const html = `<div id="modal-expiracao-seguranca" style="position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.95); z-index: 99999; display: flex; align-items: center; justify-content: center;"><div style="background: #0F1219; border: 1px solid #1A202C; border-radius: 16px; padding: 30px; width: 90%; max-width: 400px; text-align: center;"><div style="font-size: 40px; color: #EC1A7C; margin-bottom: 15px;">🔒</div><h2 style="font-size: 18px; color: #FFF; text-transform: uppercase; font-weight: 900; margin-bottom: 10px;">Sessão Expirada</h2><p style="font-size: 13px; color: #94A3B8; margin-bottom: 25px;">Sessão de Diretoria encerrada.</p><button onclick="localStorage.clear(); window.location.href='${URL_LOGIN}'" style="width: 100%; background: #EC1A7C; color: #FFF; border: none; padding: 15px; border-radius: 10px; font-weight: 900;">Entrar Novamente</button></div></div>`; 
+            document.body.insertAdjacentHTML('beforeend', html);
+        }
+
+        function auditarSessao() {
+            const tokenAtivo = localStorage.getItem(TOKEN_KEY);
+            if (!tokenAtivo) return window.location.href = URL_LOGIN;
+            try {
+                const payload = JSON.parse(atob(tokenAtivo.split('.')[1]));
+                if (Date.now() >= payload.exp * 1000) exibirModalExpiracao();
+                else { clearTimeout(temporizadorSessao); temporizadorSessao = setTimeout(exibirModalExpiracao, (payload.exp * 1000) - Date.now()); }
+            } catch (e) { localStorage.clear(); window.location.href = URL_LOGIN; }
+        }
+
+        window.addEventListener('load', auditarSessao);
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') auditarSessao(); });
+    })();
+    </script>
+</body>
+</html>

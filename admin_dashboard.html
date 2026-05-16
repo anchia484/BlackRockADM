@@ -33,6 +33,15 @@
         .header-title { font-size: 14px; font-weight: 900; letter-spacing: 1px; color: var(--magenta); text-transform: uppercase; }
         .menu-icon { font-size: 24px; cursor: pointer; color: var(--texto-med); }
 
+        /* ESTILO DO NOVO BOTÃO DO MERCADO NO HEADER */
+        .btn-header-mercado {
+            background: rgba(0, 255, 255, 0.1); color: var(--cyan); border: 1px solid var(--cyan); 
+            padding: 6px 12px; border-radius: 8px; text-decoration: none; font-size: 10px; 
+            font-weight: 900; text-transform: uppercase; display: flex; align-items: center; 
+            gap: 6px; transition: 0.3s; box-shadow: 0 0 10px rgba(0,255,255,0.1);
+        }
+        .btn-header-mercado:active { transform: scale(0.95); background: rgba(0, 255, 255, 0.2); }
+
         .sidebar { 
             position: fixed; top: 0; left: -280px; width: 280px; height: 100%; 
             background: var(--card); border-right: 1px solid var(--borda); 
@@ -106,7 +115,11 @@
     <header class="header-admin">
         <div class="menu-icon" onclick="toggleSidebar()">☰</div>
         <div class="header-title">COCKPIT DIRETORIA</div>
-        <div style="width: 24px;"></div>
+        
+        <a href="admin_mercado.html" class="btn-header-mercado">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            Mercado
+        </a>
     </header>
 
     <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
@@ -120,6 +133,7 @@
         <a href="admin_usuarios.html" class="nav-link">👥 Usuários</a>
         <a href="admin_rede.html" class="nav-link">🌳 Rede & Comissões</a>
         <a href="admin_configs.html" class="nav-link">⚙️ Planos (Nodes)</a>
+        <a href="admin_mercado.html" class="nav-link" style="color: var(--cyan);">🔥 Mercado Premium</a>
         <a href="admin_tarefas.html" class="nav-link">📋 Controle de Tarefas</a>
         <a href="admin_feed.html" class="nav-link">📢 Feed & Mural</a>
         <a href="admin_chat.html" class="nav-link">💬 Suporte (SAC) <span class="notif-badge" id="badge-chat">0</span></a>
@@ -198,6 +212,7 @@
     </div>
 
     <script>
+
         const URL_BASE = 'https://blackrock-gest-o.onrender.com';
         const ADMIN_TOKEN = localStorage.getItem('br_admin_token');
 
@@ -327,7 +342,7 @@
             if(senha !== 'CONFIRMAR') return;
             if(confirm("TEM A CERTEZA ABSOLUTA?")) {
                 try {
-                    const res = await fetch(`${URL_BASE}/api/admin/reset-sistema`, {
+   const res = await fetch(`${URL_BASE}/api/admin/reset-sistema`, {
                         method: 'POST', headers: { 'Authorization': `Bearer ${ADMIN_TOKEN}` }
                      });
                     const data = await res.json();
