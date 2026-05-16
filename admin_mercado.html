@@ -131,7 +131,7 @@
         // ================= CONFIGURAÇÃO GLOBAL =================
         let mercadoAbertoGlobal = false;
 
-        async function carregarConfig() {
+async function carregarConfig() {
             try {
                 const res = await fetch(`${URL_BASE}/api/admin-mercado/config`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if(res.ok) {
@@ -139,8 +139,14 @@
                     mercadoAbertoGlobal = data.isMercadoAberto;
                     atualizarBotoes(mercadoAbertoGlobal);
                     if(data.dataFechamento) {
+                        // CORREÇÃO DO FUSO HORÁRIO DE MOÇAMBIQUE (Impede o salto de 2 horas)
                         const d = new Date(data.dataFechamento);
-                        document.getElementById('dataFecho').value = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                        const yyyy = d.getFullYear();
+                        const mm = String(d.getMonth() + 1).padStart(2, '0');
+                        const dd = String(d.getDate()).padStart(2, '0');
+                        const hh = String(d.getHours()).padStart(2, '0');
+                        const min = String(d.getMinutes()).padStart(2, '0');
+                        document.getElementById('dataFecho').value = `${yyyy}-${mm}-${dd}T${hh}:${min}`;
                     }
                 }
             } catch(e) { mostrarNotificacao('Erro ao ler configs', 'var(--alerta)', '#FFF'); }
