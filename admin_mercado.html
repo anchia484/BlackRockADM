@@ -131,15 +131,16 @@
         // ================= CONFIGURAÇÃO GLOBAL =================
         let mercadoAbertoGlobal = false;
 
-async function carregarConfig() {
+        async function carregarConfig() {
             try {
                 const res = await fetch(`${URL_BASE}/api/admin-mercado/config`, { headers: { 'Authorization': `Bearer ${token}` } });
                 if(res.ok) {
                     const data = await res.json();
                     mercadoAbertoGlobal = data.isMercadoAberto;
                     atualizarBotoes(mercadoAbertoGlobal);
+                    
                     if(data.dataFechamento) {
-                        // CORREÇÃO DO FUSO HORÁRIO DE MOÇAMBIQUE (Impede o salto de 2 horas)
+                        // 🚀 CORREÇÃO DEFINITIVA DO FUSO HORÁRIO
                         const d = new Date(data.dataFechamento);
                         const yyyy = d.getFullYear();
                         const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -171,7 +172,13 @@ async function carregarConfig() {
         }
 
         async function salvarConfig() {
-            const dataF = document.getElementById('dataFecho').value;
+            let dataF = document.getElementById('dataFecho').value;
+            
+            // Converte a data que você digitou para a linguagem do Servidor antes de enviar!
+            if(dataF) {
+                dataF = new Date(dataF).toISOString();
+            }
+
             try {
                 const res = await fetch(`${URL_BASE}/api/admin-mercado/config`, {
                     method: 'POST',
@@ -256,33 +263,6 @@ async function carregarConfig() {
                 else mostrarNotificacao(d.erro, 'var(--alerta)', '#FFF');
             } catch(e) {}
         }
-    </script>
-
-    <script>
-    (function() {
-        const TOKEN_KEY = 'br_admin_token';
-        const URL_LOGIN = 'admin_login.html';
-        let temporizadorSessao = null;
-
-        function exibirModalExpiracao() {
-            if (document.getElementById('modal-expiracao-seguranca')) return;
-            const html = `<div id="modal-expiracao-seguranca" style="position: fixed; top: 0; left: 0; width: 100%; height: 100dvh; background: rgba(0,0,0,0.95); z-index: 99999; display: flex; align-items: center; justify-content: center;"><div style="background: #0F1219; border: 1px solid #1A202C; border-radius: 16px; padding: 30px; width: 90%; max-width: 400px; text-align: center;"><div style="font-size: 40px; color: #EC1A7C; margin-bottom: 15px;">🔒</div><h2 style="font-size: 18px; color: #FFF; text-transform: uppercase; font-weight: 900; margin-bottom: 10px;">Sessão Expirada</h2><p style="font-size: 13px; color: #94A3B8; margin-bottom: 25px;">Sessão de Diretoria encerrada.</p><button onclick="localStorage.clear(); window.location.href='${URL_LOGIN}'" style="width: 100%; background: #EC1A7C; color: #FFF; border: none; padding: 15px; border-radius: 10px; font-weight: 900;">Entrar Novamente</button></div></div>`; 
-            document.body.insertAdjacentHTML('beforeend', html);
-        }
-
-        function auditarSessao() {
-            const tokenAtivo = localStorage.getItem(TOKEN_KEY);
-            if (!tokenAtivo) return window.location.href = URL_LOGIN;
-            try {
-                const payload = JSON.parse(atob(tokenAtivo.split('.')[1]));
-                if (Date.now() >= payload.exp * 1000) exibirModalExpiracao();
-                else { clearTimeout(temporizadorSessao); temporizadorSessao = setTimeout(exibirModalExpiracao, (payload.exp * 1000) - Date.now()); }
-            } catch (e) { localStorage.clear(); window.location.href = URL_LOGIN; }
-        }
-
-        window.addEventListener('load', auditarSessao);
-        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') auditarSessao(); });
-    })();
     </script>
 </body>
 </html>
